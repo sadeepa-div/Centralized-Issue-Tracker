@@ -19,74 +19,62 @@ function Register() {
   }
 
   return (
-    <div>
-      <h2>Register</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h2>Create Account</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Full Name</label>
-          <br />
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-        </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </div>
 
-        <br />
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Email</label>
-          <br />
+          <div className="form-group">
+            <label>Role</label>
+            <select
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+            >
+              <option value="Developer">Developer</option>
+              <option value="Tester">Tester</option>
+              <option value="Project Manager">Project Manager</option>
+            </select>
+          </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-        </div>
+          <button className="auth-button" type="submit">
+            Register
+          </button>
+        </form>
 
-        <br />
-
-        <div>
-          <label>Password</label>
-          <br />
-
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Role</label>
-          <br />
-
-          <select
-            value={role}
-            onChange={(event) => setRole(event.target.value)}
-          >
-            <option value="Developer">Developer</option>
-            <option value="Tester">Tester</option>
-            <option value="Project Manager">Project Manager</option>
-          </select>
-        </div>
-
-        <br />
-
-        <button type="submit">Register</button>
-      </form>
-
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+        <p className="auth-link">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </div>
     </div>
   )
 }
