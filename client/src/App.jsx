@@ -1,17 +1,17 @@
-import Header from './components/Header'
-import IssueStatus from './components/IssueStatus'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Login from './pages/Login'
+import Register from './pages/Register'
 import './App.css'
 
 function App() {
   return (
-    <>
-      <Header
-        title="Centralized Issue & Bug Tracking System"
-        description="Track and manage software issues in one place."
-      />
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
 
-      <IssueStatus />
-    </>
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/register" element={<Register />} />
+    </Routes>
   )
 }
 
