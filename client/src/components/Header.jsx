@@ -1,8 +1,8 @@
-function Header() {
+function Header({ title, description }) {
   return (
     <>
-      <h1>Centralized Issue & Bug Tracking System</h1>
-      <p>Track and manage software issues in one place.</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
     </>
   )
 }

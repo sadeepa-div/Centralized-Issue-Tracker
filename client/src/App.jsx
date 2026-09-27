@@ -3,7 +3,10 @@ import './App.css'
 
 function App() {
   return (
-    <Header />
+    <Header
+      title="Centralized Issue & Bug Tracking System"
+      description="Track and manage software issues in one place."
+    />
   )
 }
 
