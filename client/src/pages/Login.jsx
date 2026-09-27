@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const navigate = useNavigate()
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -12,6 +14,8 @@ function Login() {
       email,
       password
     })
+
+    navigate('/dashboard')
   }
 
   return (
@@ -22,6 +26,7 @@ function Login() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
+
             <input
               type="email"
               value={email}
@@ -32,6 +37,7 @@ function Login() {
 
           <div className="form-group">
             <label>Password</label>
+
             <input
               type="password"
               value={password}
