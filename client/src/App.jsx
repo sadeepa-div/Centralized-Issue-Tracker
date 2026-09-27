@@ -2,8 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
-import './App.css'
 import Projects from './pages/Projects'
+import Issues from './pages/Issues'
+import CreateIssue from './pages/CreateIssue'
+import './App.css'
 
 function App() {
   return (
@@ -17,7 +19,10 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
 
       <Route path="/projects" element={<Projects />} />
-      
+
+      <Route path="/issues" element={<Issues />} />
+
+      <Route path="/create-issue" element={<CreateIssue />} />
     </Routes>
   )
 }

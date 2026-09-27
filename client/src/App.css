@@ -247,3 +247,57 @@
     grid-template-columns: 1fr;
   }
 }
+
+.issues-table-container {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.issues-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.issues-table th,
+.issues-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.issues-table th {
+  background: #f8fafc;
+}
+
+.issue-form-card {
+  max-width: 650px;
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.issue-form-card input,
+.issue-form-card textarea,
+.issue-form-card select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.issue-form-card textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.issue-form-card button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
