@@ -1,7 +1,10 @@
-import "./App.css";
+import Header from './components/Header'
+import './App.css'
 
 function App() {
-  return <h1>Centralized Issue & Bug Tracking System</h1>;
+  return (
+    <Header />
+  )
 }
 
-export default App;
+export default App
