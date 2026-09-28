@@ -307,3 +307,14 @@
   margin-bottom: 15px;
   text-align: center;
 }
+
+.project-message {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: #e0f2fe;
+  border-radius: 6px;
+}
+
+.project-card p {
+  margin-top: 8px;
+}

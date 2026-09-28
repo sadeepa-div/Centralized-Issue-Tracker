@@ -1,24 +1,85 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 function Projects() {
   const [projectName, setProjectName] = useState('')
   const [description, setDescription] = useState('')
   const [projects, setProjects] = useState([])
+  const [message, setMessage] = useState('')
 
-  const handleSubmit = (event) => {
+  const token = localStorage.getItem('token')
+
+  const storedUser = localStorage.getItem('user')
+  const user = storedUser ? JSON.parse(storedUser) : null
+
+  const canCreateProject =
+    user?.role === 'Admin' || user?.role === 'Project Manager'
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(
+        'http://localhost:5000/api/projects',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setProjects(data)
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    const newProject = {
-      id: Date.now(),
-      name: projectName,
-      description: description,
+    try {
+      const response = await fetch(
+        'http://localhost:5000/api/projects',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            name: projectName,
+            description,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setMessage('Project created successfully')
+
+      setProjectName('')
+      setDescription('')
+
+      fetchProjects()
+    } catch (error) {
+      setMessage('Cannot connect to server')
     }
-
-    setProjects([...projects, newProject])
-
-    setProjectName('')
-    setDescription('')
   }
 
   return (
@@ -36,54 +97,83 @@ function Projects() {
 
       <main className="dashboard-content">
         <div className="page-header">
-          <div>
-            <h1>Projects</h1>
-            <p>Create and manage your software projects.</p>
+          <h1>Projects</h1>
+          <p>Create and manage software projects.</p>
+        </div>
+
+        {message && (
+          <p className="project-message">
+            {message}
+          </p>
+        )}
+
+        {canCreateProject && (
+          <div className="project-form-card">
+            <h2>Create Project</h2>
+
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Project Name</label>
+
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={(event) =>
+                    setProjectName(event.target.value)
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+
+                <textarea
+                  value={description}
+                  onChange={(event) =>
+                    setDescription(event.target.value)
+                  }
+                  required
+                />
+              </div>
+
+              <button
+                className="primary-button"
+                type="submit"
+              >
+                Create Project
+              </button>
+            </form>
           </div>
-        </div>
-
-        <div className="project-form-card">
-          <h2>Create Project</h2>
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Project Name</label>
-
-              <input
-                type="text"
-                value={projectName}
-                onChange={(event) => setProjectName(event.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-              />
-            </div>
-
-            <button className="primary-button" type="submit">
-              Create Project
-            </button>
-          </form>
-        </div>
+        )}
 
         <div className="project-list">
           <h2>Project List</h2>
 
           {projects.length === 0 ? (
-            <p>No projects created yet.</p>
+            <p>No projects available.</p>
           ) : (
             <div className="project-grid">
               {projects.map((project) => (
-                <div className="project-card" key={project.id}>
+                <div
+                  className="project-card"
+                  key={project._id}
+                >
                   <h3>{project.name}</h3>
+
                   <p>{project.description}</p>
+
+                  {project.createdBy && (
+                    <p>
+                      <strong>Created by:</strong>{' '}
+                      {project.createdBy.name}
+                    </p>
+                  )}
+
+                  <p>
+                    <strong>Members:</strong>{' '}
+                    {project.members?.length || 0}
+                  </p>
                 </div>
               ))}
             </div>
