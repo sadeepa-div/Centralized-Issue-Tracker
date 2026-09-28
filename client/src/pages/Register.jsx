@@ -1,21 +1,49 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('Developer')
+  const [message, setMessage] = useState('')
 
-  const handleSubmit = (event) => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    console.log({
-      name,
-      email,
-      password,
-      role
-    })
+    try {
+      const response = await fetch(
+        'http://localhost:5000/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            role,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      navigate('/dashboard')
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
   }
 
   return (
@@ -23,9 +51,12 @@ function Register() {
       <div className="auth-card">
         <h2>Create Account</h2>
 
+        {message && <p className="error-message">{message}</p>}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Full Name</label>
+
             <input
               type="text"
               value={name}
@@ -36,6 +67,7 @@ function Register() {
 
           <div className="form-group">
             <label>Email</label>
+
             <input
               type="email"
               value={email}
@@ -46,6 +78,7 @@ function Register() {
 
           <div className="form-group">
             <label>Password</label>
+
             <input
               type="password"
               value={password}
@@ -56,6 +89,7 @@ function Register() {
 
           <div className="form-group">
             <label>Role</label>
+
             <select
               value={role}
               onChange={(event) => setRole(event.target.value)}

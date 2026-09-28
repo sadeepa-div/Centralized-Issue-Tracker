@@ -1,6 +1,18 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Dashboard() {
+  const navigate = useNavigate()
+
+  const storedUser = localStorage.getItem('user')
+  const user = storedUser ? JSON.parse(storedUser) : null
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+
+    navigate('/login')
+  }
+
   return (
     <div className="dashboard-page">
       <aside className="sidebar">
@@ -18,10 +30,17 @@ function Dashboard() {
         <div className="dashboard-header">
           <div>
             <h1>Dashboard</h1>
-            <p>Overview of your projects and issues.</p>
+
+            {user && (
+              <p>
+                Welcome, {user.name} ({user.role})
+              </p>
+            )}
           </div>
 
-          <button>Logout</button>
+          <button onClick={handleLogout}>
+            Logout
+          </button>
         </div>
 
         <div className="stats-grid">

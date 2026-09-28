@@ -301,3 +301,9 @@
   color: white;
   cursor: pointer;
 }
+
+.error-message {
+  color: #dc2626;
+  margin-bottom: 15px;
+  text-align: center;
+}

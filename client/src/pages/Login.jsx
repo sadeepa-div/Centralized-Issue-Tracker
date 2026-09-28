@@ -4,24 +4,50 @@ import { Link, useNavigate } from 'react-router-dom'
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [message, setMessage] = useState('')
 
   const navigate = useNavigate()
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    console.log({
-      email,
-      password
-    })
+    try {
+      const response = await fetch(
+        'http://localhost:5000/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      )
 
-    navigate('/dashboard')
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      navigate('/dashboard')
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
         <h2>Login</h2>
+
+        {message && <p className="error-message">{message}</p>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

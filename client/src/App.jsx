@@ -1,10 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import Issues from './pages/Issues'
 import CreateIssue from './pages/CreateIssue'
+
+import ProtectedRoute from './components/ProtectedRoute'
+
 import './App.css'
 
 function App() {
@@ -16,13 +20,41 @@ function App() {
 
       <Route path="/register" element={<Register />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/projects" element={<Projects />} />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Projects />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/issues" element={<Issues />} />
+      <Route
+        path="/issues"
+        element={
+          <ProtectedRoute>
+            <Issues />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/create-issue" element={<CreateIssue />} />
+      <Route
+        path="/create-issue"
+        element={
+          <ProtectedRoute>
+            <CreateIssue />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }
