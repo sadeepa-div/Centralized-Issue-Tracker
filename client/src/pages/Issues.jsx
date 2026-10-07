@@ -1,39 +1,36 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 function Issues() {
-  const [issues, setIssues] = useState([])
-  const [message, setMessage] = useState('')
+  const [issues, setIssues] = useState([]);
+  const [message, setMessage] = useState("");
 
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem("token");
 
   const fetchIssues = async () => {
     try {
-      const response = await fetch(
-        'http://localhost:5000/api/issues',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      const response = await fetch("http://localhost:5000/api/issues", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message)
-        return
+        setMessage(data.message);
+        return;
       }
 
-      setIssues(data)
+      setIssues(data);
     } catch (error) {
-      setMessage('Cannot connect to server')
+      setMessage("Cannot connect to server");
     }
-  }
+  };
 
   useEffect(() => {
-    fetchIssues()
-  }, [])
+    fetchIssues();
+  }, []);
 
   return (
     <div className="dashboard-page">
@@ -44,25 +41,17 @@ function Issues() {
           <Link to="/dashboard">Dashboard</Link>
           <Link to="/projects">Projects</Link>
           <Link to="/issues">Issues</Link>
-          <Link to="/create-issue">
-            Create Issue
-          </Link>
+          <Link to="/create-issue">Create Issue</Link>
         </nav>
       </aside>
 
       <main className="dashboard-content">
         <div className="page-header">
           <h1>Issues</h1>
-          <p>
-            View and manage reported issues.
-          </p>
+          <p>View and manage reported issues.</p>
         </div>
 
-        {message && (
-          <p className="error-message">
-            {message}
-          </p>
-        )}
+        {message && <p className="error-message">{message}</p>}
 
         <div className="issues-table-container">
           {issues.length === 0 ? (
@@ -83,11 +72,11 @@ function Issues() {
               <tbody>
                 {issues.map((issue) => (
                   <tr key={issue._id}>
-                    <td>{issue.title}</td>
-
                     <td>
-                      {issue.project?.name}
+                      <Link to={`/issues/${issue._id}`}>{issue.title}</Link>
                     </td>
+
+                    <td>{issue.project?.name}</td>
 
                     <td>{issue.type}</td>
 
@@ -95,9 +84,7 @@ function Issues() {
 
                     <td>{issue.status}</td>
 
-                    <td>
-                      {issue.reporter?.name}
-                    </td>
+                    <td>{issue.reporter?.name}</td>
                   </tr>
                 ))}
               </tbody>
@@ -106,7 +93,7 @@ function Issues() {
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default Issues
+export default Issues;

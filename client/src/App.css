@@ -318,3 +318,38 @@
 .project-card p {
   margin-top: 8px;
 }
+
+.issue-details-card {
+  max-width: 750px;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.issue-details-card h2 {
+  margin-bottom: 25px;
+}
+
+.issue-detail-row {
+  margin-bottom: 20px;
+}
+
+.issue-detail-row strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.status-update-section {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 250px;
+}
+
+.status-update-section select {
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}

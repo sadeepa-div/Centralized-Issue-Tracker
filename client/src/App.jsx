@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import Issues from './pages/Issues'
 import CreateIssue from './pages/CreateIssue'
-
+import IssueDetails from './pages/IssueDetails'
 import ProtectedRoute from './components/ProtectedRoute'
 
 import './App.css'
@@ -46,6 +46,16 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+  path="/issues/:id"
+  element={
+    <ProtectedRoute>
+      <IssueDetails />
+    </ProtectedRoute>
+  }
+/>
+
 
       <Route
         path="/create-issue"
