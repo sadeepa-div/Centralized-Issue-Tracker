@@ -1,37 +1,42 @@
-const express = require('express')
+const express = require("express");
 
 const {
   createIssue,
   getIssues,
   getIssueById,
   updateIssueStatus,
-  assignIssue
-} = require('../controllers/issueController')
+  assignIssue,
+  getIssueStats,
+} = require("../controllers/issueController");
 
-const {
-  authorizeRoles
-} = require('../middleware/roleMiddleware')
+const { authorizeRoles } = require("../middleware/roleMiddleware");
 
+const { protect } = require("../middleware/authMiddleware");
 
-const {
-  protect
-} = require('../middleware/authMiddleware')
+const router = express.Router();
 
-const router = express.Router()
-
-router.get('/', protect, getIssues)
-
-router.post('/', protect, createIssue)
-
-router.get('/:id', protect, getIssueById)
-
-router.patch('/:id/status', protect, updateIssueStatus)
-
-router.patch(
-  '/:id/assignee',
+router.get("/", protect, getIssues);
+router.get(
+  '/stats/summary',
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  assignIssue
+  getIssueStats
 )
 
-module.exports = router
+router.post("/", protect, createIssue);
+
+
+
+router.get("/:id", protect, getIssueById);
+
+router.patch("/:id/status", protect, updateIssueStatus);
+
+router.patch(
+  "/:id/assignee",
+  protect,
+  authorizeRoles("Admin", "Project Manager"),
+  assignIssue,
+);
+
+
+
+module.exports = router;

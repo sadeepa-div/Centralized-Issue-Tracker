@@ -1,7 +1,8 @@
 const express = require('express')
 
 const {
-  getDevelopers
+  getDevelopers,
+  getTeamUsers
 } = require('../controllers/userController')
 
 const {
@@ -11,5 +12,7 @@ const {
 const router = express.Router()
 
 router.get('/developers', protect, getDevelopers)
+
+router.get('/team', protect, getTeamUsers)
 
 module.exports = router

@@ -1,20 +1,38 @@
-const User = require("../models/User");
+const User = require('../models/User')
 
 const getDevelopers = async (req, res) => {
   try {
     const developers = await User.find({
-      role: "Developer",
-    }).select("-password");
+      role: 'Developer'
+    }).select('-password')
 
-    res.status(200).json(developers);
+    res.status(200).json(developers)
   } catch (error) {
     res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+      message: 'Server error',
+      error: error.message
+    })
   }
-};
+}
+
+const getTeamUsers = async (req, res) => {
+  try {
+    const users = await User.find({
+      role: {
+        $in: ['Developer', 'Tester']
+      }
+    }).select('-password')
+
+    res.status(200).json(users)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
+  }
+}
 
 module.exports = {
   getDevelopers,
-};
+  getTeamUsers
+}

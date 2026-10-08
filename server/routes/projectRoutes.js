@@ -2,7 +2,10 @@ const express = require('express')
 
 const {
   createProject,
-  getProjects
+  getProjects,
+  getProjectById,
+  addProjectMember,
+  removeProjectMember
 } = require('../controllers/projectController')
 
 const {
@@ -22,6 +25,26 @@ router.post(
   protect,
   authorizeRoles('Admin', 'Project Manager'),
   createProject
+)
+
+router.get(
+  '/:id',
+  protect,
+  getProjectById
+)
+
+router.patch(
+  '/:id/members',
+  protect,
+  authorizeRoles('Admin', 'Project Manager'),
+  addProjectMember
+)
+
+router.delete(
+  '/:id/members/:userId',
+  protect,
+  authorizeRoles('Admin', 'Project Manager'),
+  removeProjectMember
 )
 
 module.exports = router

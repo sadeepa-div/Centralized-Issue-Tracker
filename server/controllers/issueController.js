@@ -213,10 +213,57 @@ const assignIssue = async (req, res) => {
   }
 };
 
+const getIssueStats = async (req, res) => {
+  try {
+    const [
+      totalIssues,
+      openIssues,
+      inProgressIssues,
+      resolvedIssues,
+      recentIssues,
+    ] = await Promise.all([
+      Issue.countDocuments(),
+
+      Issue.countDocuments({
+        status: "Open",
+      }),
+
+      Issue.countDocuments({
+        status: "In Progress",
+      }),
+
+      Issue.countDocuments({
+        status: "Resolved",
+      }),
+
+      Issue.find()
+        .populate("project", "name")
+        .populate("reporter", "name")
+        .populate("assignee", "name")
+        .sort({ createdAt: -1 })
+        .limit(5),
+    ]);
+
+    res.status(200).json({
+      totalIssues,
+      openIssues,
+      inProgressIssues,
+      resolvedIssues,
+      recentIssues,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createIssue,
   getIssues,
   getIssueById,
   updateIssueStatus,
   assignIssue,
+  getIssueStats,
 };

@@ -1,15 +1,16 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProjectDetails from "./pages/ProjectDetails";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import Issues from "./pages/Issues";
+import CreateIssue from "./pages/CreateIssue";
+import IssueDetails from "./pages/IssueDetails";
+import ProtectedRoute from "./components/ProtectedRoute";
+import MyIssues from "./pages/MyIssues";
 
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Projects from './pages/Projects'
-import Issues from './pages/Issues'
-import CreateIssue from './pages/CreateIssue'
-import IssueDetails from './pages/IssueDetails'
-import ProtectedRoute from './components/ProtectedRoute'
-
-import './App.css'
+import "./App.css";
 
 function App() {
   return (
@@ -48,14 +49,22 @@ function App() {
       />
 
       <Route
-  path="/issues/:id"
-  element={
-    <ProtectedRoute>
-      <IssueDetails />
-    </ProtectedRoute>
-  }
-/>
+        path="/my-issues"
+        element={
+          <ProtectedRoute>
+            <MyIssues />
+          </ProtectedRoute>
+        }
+      />
 
+      <Route
+        path="/issues/:id"
+        element={
+          <ProtectedRoute>
+            <IssueDetails />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/create-issue"
@@ -65,8 +74,17 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/projects/:id"
+        element={
+          <ProtectedRoute>
+            <ProjectDetails />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

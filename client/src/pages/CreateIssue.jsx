@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import CreateIssueForm from '../components/CreateIssueForm'
+import { Link } from "react-router-dom";
+import CreateIssueForm from "../components/CreateIssueForm";
 
 function CreateIssue() {
   return (
@@ -11,6 +11,7 @@ function CreateIssue() {
           <Link to="/dashboard">Dashboard</Link>
           <Link to="/projects">Projects</Link>
           <Link to="/issues">Issues</Link>
+          <Link to="/my-issues">My Issues</Link>
           <Link to="/create-issue">Create Issue</Link>
         </nav>
       </aside>
@@ -26,7 +27,7 @@ function CreateIssue() {
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default CreateIssue
+export default CreateIssue;

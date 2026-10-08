@@ -462,3 +462,82 @@
     grid-template-columns: 1fr;
   }
 }
+
+.recent-issues {
+  margin-top: 20px;
+}
+
+.recent-issue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.recent-issue-item:last-child {
+  border-bottom: none;
+}
+
+.recent-issue-item a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.recent-issue-item p {
+  margin-top: 5px;
+  color: #64748b;
+}
+
+.project-details-card,
+.member-management,
+.project-members {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+
+.project-details-card p {
+  margin-top: 12px;
+}
+
+.member-management select {
+  width: 300px;
+  padding: 10px;
+  margin-right: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.member-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.member-card p {
+  margin-top: 5px;
+  color: #64748b;
+}
+
+.member-card span {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.remove-button {
+  border: none;
+  background: #dc2626;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.remove-button:hover {
+  background: #b91c1c;
+}
