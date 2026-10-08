@@ -1,80 +1,231 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import API_BASE_URL from '../config/api'
 
 function IssueDetails() {
-  const { id } = useParams();
+  const { id } = useParams()
 
-  const [issue, setIssue] = useState(null);
-  const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("");
+  const [issue, setIssue] = useState(null)
+  const [status, setStatus] = useState('')
+  const [message, setMessage] = useState('')
 
-  const token = localStorage.getItem("token");
+  const [developers, setDevelopers] = useState([])
+  const [assignee, setAssignee] = useState('')
+
+  const [comments, setComments] = useState([])
+  const [commentText, setCommentText] = useState('')
+
+  const token = localStorage.getItem('token')
+
+  const storedUser = localStorage.getItem('user')
+  const user = storedUser
+    ? JSON.parse(storedUser)
+    : null
+
+  const canAssign =
+    user?.role === 'Admin' ||
+    user?.role === 'Project Manager'
 
   const fetchIssue = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/issues/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/issues/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message);
-        return;
+        setMessage(data.message)
+        return
       }
 
-      setIssue(data);
-      setStatus(data.status);
+      setIssue(data)
+      setStatus(data.status)
+      setAssignee(data.assignee?._id || '')
     } catch (error) {
-      setMessage("Cannot connect to server");
+      setMessage('Cannot connect to server')
     }
-  };
+  }
+
+  const fetchDevelopers = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/users/developers`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setDevelopers(data)
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/comments/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setComments(data)
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
 
   useEffect(() => {
-    fetchIssue();
-  }, [id]);
+    fetchIssue()
+    fetchComments()
+
+    if (canAssign) {
+      fetchDevelopers()
+    }
+  }, [id])
 
   const handleStatusUpdate = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/issues/${id}/status`,
+        `${API_BASE_URL}/issues/${id}/status`,
         {
-          method: "PATCH",
+          method: 'PATCH',
 
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
           },
 
           body: JSON.stringify({
-            status,
-          }),
-        },
-      );
+            status
+          })
+        }
+      )
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.message);
-        return;
+        setMessage(data.message)
+        return
       }
 
-      setMessage("Issue status updated successfully");
+      setMessage(
+        'Issue status updated successfully'
+      )
 
-      fetchIssue();
+      fetchIssue()
     } catch (error) {
-      setMessage("Cannot connect to server");
+      setMessage('Cannot connect to server')
     }
-  };
+  }
+
+  const handleAssignIssue = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/issues/${id}/assignee`,
+        {
+          method: 'PATCH',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+
+          body: JSON.stringify({
+            assignee
+          })
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setMessage('Issue assigned successfully')
+
+      fetchIssue()
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
+
+  const handleAddComment = async (event) => {
+    event.preventDefault()
+
+    if (!commentText.trim()) {
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/comments/${id}`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+
+          body: JSON.stringify({
+            text: commentText
+          })
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(data.message)
+        return
+      }
+
+      setCommentText('')
+
+      fetchComments()
+    } catch (error) {
+      setMessage('Cannot connect to server')
+    }
+  }
 
   if (!issue) {
     return (
       <div className="dashboard-content">
-        {message ? <p>{message}</p> : <p>Loading issue...</p>}
+        {message ? (
+          <p>{message}</p>
+        ) : (
+          <p>Loading issue...</p>
+        )}
       </div>
-    );
+    )
   }
 
   return (
@@ -83,10 +234,21 @@ function IssueDetails() {
         <h2>Bug Tracker</h2>
 
         <nav>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/issues">Issues</Link>
-          <Link to="/create-issue">Create Issue</Link>
+          <Link to="/dashboard">
+            Dashboard
+          </Link>
+
+          <Link to="/projects">
+            Projects
+          </Link>
+
+          <Link to="/issues">
+            Issues
+          </Link>
+
+          <Link to="/create-issue">
+            Create Issue
+          </Link>
         </nav>
       </aside>
 
@@ -94,43 +256,52 @@ function IssueDetails() {
         <div className="page-header">
           <h1>Issue Details</h1>
 
-          <Link to="/issues">Back to Issues</Link>
+          <Link to="/issues">
+            Back to Issues
+          </Link>
         </div>
 
-        {message && <p className="project-message">{message}</p>}
+        {message && (
+          <p className="project-message">
+            {message}
+          </p>
+        )}
 
         <div className="issue-details-card">
           <h2>{issue.title}</h2>
 
           <div className="issue-detail-row">
-            <strong>Description:</strong>
+            <strong>Description</strong>
             <p>{issue.description}</p>
           </div>
 
           <div className="issue-detail-row">
-            <strong>Project:</strong>
+            <strong>Project</strong>
             <p>{issue.project?.name}</p>
           </div>
 
           <div className="issue-detail-row">
-            <strong>Type:</strong>
+            <strong>Type</strong>
             <p>{issue.type}</p>
           </div>
 
           <div className="issue-detail-row">
-            <strong>Priority:</strong>
+            <strong>Priority</strong>
             <p>{issue.priority}</p>
           </div>
 
           <div className="issue-detail-row">
-            <strong>Reporter:</strong>
+            <strong>Reporter</strong>
             <p>{issue.reporter?.name}</p>
           </div>
 
           <div className="issue-detail-row">
-            <strong>Assignee:</strong>
+            <strong>Assignee</strong>
 
-            <p>{issue.assignee?.name || "Not Assigned"}</p>
+            <p>
+              {issue.assignee?.name ||
+                'Not Assigned'}
+            </p>
           </div>
 
           <div className="status-update-section">
@@ -140,27 +311,141 @@ function IssueDetails() {
 
             <select
               value={status}
-              onChange={(event) => setStatus(event.target.value)}
+              onChange={(event) =>
+                setStatus(event.target.value)
+              }
             >
-              <option value="Open">Open</option>
+              <option value="Open">
+                Open
+              </option>
 
-              <option value="In Progress">In Progress</option>
+              <option value="In Progress">
+                In Progress
+              </option>
 
-              <option value="Testing">Testing</option>
+              <option value="Testing">
+                Testing
+              </option>
 
-              <option value="Resolved">Resolved</option>
+              <option value="Resolved">
+                Resolved
+              </option>
 
-              <option value="Closed">Closed</option>
+              <option value="Closed">
+                Closed
+              </option>
             </select>
 
-            <button className="primary-button" onClick={handleStatusUpdate}>
+            <button
+              className="primary-button"
+              onClick={handleStatusUpdate}
+            >
               Update Status
             </button>
+          </div>
+
+          {canAssign && (
+            <div className="assignment-section">
+              <label>
+                <strong>
+                  Assign Developer
+                </strong>
+              </label>
+
+              <select
+                value={assignee}
+                onChange={(event) =>
+                  setAssignee(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="">
+                  Select Developer
+                </option>
+
+                {developers.map(
+                  (developer) => (
+                    <option
+                      key={developer._id}
+                      value={developer._id}
+                    >
+                      {developer.name}
+                    </option>
+                  )
+                )}
+              </select>
+
+              <button
+                className="primary-button"
+                onClick={
+                  handleAssignIssue
+                }
+                disabled={!assignee}
+              >
+                Assign Issue
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="comments-section">
+          <h2>Comments</h2>
+
+          <form onSubmit={handleAddComment}>
+            <textarea
+              placeholder="Write a comment..."
+              value={commentText}
+              onChange={(event) =>
+                setCommentText(
+                  event.target.value
+                )
+              }
+              required
+            />
+
+            <button
+              className="primary-button"
+              type="submit"
+            >
+              Add Comment
+            </button>
+          </form>
+
+          <div className="comments-list">
+            {comments.length === 0 ? (
+              <p>No comments yet.</p>
+            ) : (
+              comments.map((comment) => (
+                <div
+                  className="comment-card"
+                  key={comment._id}
+                >
+                  <div className="comment-header">
+                    <strong>
+                      {comment.user?.name}
+                    </strong>
+
+                    <span>
+                      {comment.user?.role}
+                    </span>
+                  </div>
+
+                  <p>{comment.text}</p>
+
+                  <small>
+                    {new Date(
+                      comment.createdAt
+                    ).toLocaleString()}
+                  </small>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }
 
-export default IssueDetails;
+export default IssueDetails
