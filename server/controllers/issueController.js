@@ -259,11 +259,79 @@ const getIssueStats = async (req, res) => {
   }
 };
 
+const updateIssue = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      type,
+      priority,
+      project
+    } = req.body
+
+    const issue = await Issue.findById(req.params.id)
+
+    if (!issue) {
+      return res.status(404).json({
+        message: 'Issue not found'
+      })
+    }
+
+    if (title) issue.title = title
+    if (description) issue.description = description
+    if (type) issue.type = type
+    if (priority) issue.priority = priority
+    if (project) issue.project = project
+
+    await issue.save()
+
+    const updatedIssue = await Issue.findById(issue._id)
+      .populate('project', 'name')
+      .populate('reporter', 'name email role')
+      .populate('assignee', 'name email role')
+
+    res.status(200).json({
+      message: 'Issue updated successfully',
+      issue: updatedIssue
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
+  }
+}
+
+const deleteIssue = async (req, res) => {
+  try {
+    const issue = await Issue.findById(req.params.id)
+
+    if (!issue) {
+      return res.status(404).json({
+        message: 'Issue not found'
+      })
+    }
+
+    await Issue.findByIdAndDelete(req.params.id)
+
+    res.status(200).json({
+      message: 'Issue deleted successfully'
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: 'Server error',
+      error: error.message
+    })
+  }
+}
+
 module.exports = {
   createIssue,
   getIssues,
   getIssueById,
   updateIssueStatus,
+  updateIssue,
+  deleteIssue,
   assignIssue,
   getIssueStats,
 };
