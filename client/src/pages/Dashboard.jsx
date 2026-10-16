@@ -58,7 +58,7 @@ function Dashboard() {
       });
 
       setRecentIssues(data.recentIssues || []);
-    } catch (error) {
+    } catch {
       setMessage("Cannot connect to server");
     }
   };
@@ -86,12 +86,37 @@ function Dashboard() {
   };
 
   const issueStats = [
-    { label: "Total issues", value: stats.totalIssues, icon: ListTodo, tone: "total" },
+    {
+      label: "Total issues",
+      value: stats.totalIssues,
+      icon: ListTodo,
+      tone: "total",
+    },
     { label: "Open", value: stats.openIssues, icon: CircleDot, tone: "open" },
-    { label: "In progress", value: stats.inProgressIssues, icon: Clock3, tone: "progress" },
-    { label: "Testing", value: stats.testingIssues, icon: FlaskConical, tone: "testing" },
-    { label: "Resolved", value: stats.resolvedIssues, icon: CircleCheck, tone: "resolved" },
-    { label: "Closed", value: stats.closedIssues, icon: Archive, tone: "closed" },
+    {
+      label: "In progress",
+      value: stats.inProgressIssues,
+      icon: Clock3,
+      tone: "progress",
+    },
+    {
+      label: "Testing",
+      value: stats.testingIssues,
+      icon: FlaskConical,
+      tone: "testing",
+    },
+    {
+      label: "Resolved",
+      value: stats.resolvedIssues,
+      icon: CircleCheck,
+      tone: "resolved",
+    },
+    {
+      label: "Closed",
+      value: stats.closedIssues,
+      icon: Archive,
+      tone: "closed",
+    },
   ];
 
   const statusItems = [
@@ -112,8 +137,7 @@ function Dashboard() {
             <span className="dashboard-eyebrow">WORKSPACE OVERVIEW</span>
             <h1>Dashboard</h1>
             <p>
-              Welcome back, {user?.name || "there"}. Here’s your issue
-              overview.
+              Welcome back, {user?.name || "there"}. Here’s your issue overview.
             </p>
           </div>
 

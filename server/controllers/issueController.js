@@ -23,6 +23,36 @@ const createIssue = async (req, res) => {
       });
     }
 
+    let validAssignee = null;
+
+    if (assignee) {
+      const assignedUser = await User.findById(assignee);
+
+      if (!assignedUser) {
+        return res.status(404).json({
+          message: "Assigned user not found",
+        });
+      }
+
+      if (assignedUser.role !== "Developer") {
+        return res.status(400).json({
+          message: "Issue can only be assigned to a Developer",
+        });
+      }
+
+      const isProjectMember = existingProject.members.some(
+        (member) => member.toString() === assignedUser._id.toString(),
+      );
+
+      if (!isProjectMember) {
+        return res.status(400).json({
+          message: "Developer must belong to the selected project",
+        });
+      }
+
+      validAssignee = assignedUser._id;
+    }
+
     const issue = await Issue.create({
       title,
       description,
@@ -30,7 +60,7 @@ const createIssue = async (req, res) => {
       priority: priority || "Medium",
       project,
       reporter: req.user._id,
-      assignee: assignee || null,
+      assignee: validAssignee,
     });
 
     const populatedIssue = await Issue.findById(issue._id)
@@ -125,6 +155,9 @@ const getIssueById = async (req, res) => {
 // ======================================
 // UPDATE ISSUE STATUS
 // ======================================
+// ======================================
+// UPDATE ISSUE STATUS
+// ======================================
 const updateIssueStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -162,12 +195,40 @@ const updateIssueStatus = async (req, res) => {
 
     const isTester = req.user.role === "Tester" && issue.status === "Testing";
 
+    // ==========================
+    // GENERAL PERMISSION CHECK
+    // ==========================
     if (!isAdmin && !isManager && !isAssignedDeveloper && !isTester) {
       return res.status(403).json({
         message: "You do not have permission to update this issue status",
       });
     }
 
+    // ==========================
+    // DEVELOPER STATUS RULES
+    // ==========================
+    if (
+      isAssignedDeveloper &&
+      !["Open", "In Progress", "Testing"].includes(status)
+    ) {
+      return res.status(403).json({
+        message: "Developer can only use Open, In Progress or Testing status",
+      });
+    }
+
+    // ==========================
+    // TESTER STATUS RULES
+    // ==========================
+    if (isTester && !["In Progress", "Resolved"].includes(status)) {
+      return res.status(403).json({
+        message:
+          "Tester can only move a Testing issue to In Progress or Resolved",
+      });
+    }
+
+    // ==========================
+    // UPDATE STATUS
+    // ==========================
     issue.status = status;
 
     await issue.save();
@@ -202,6 +263,7 @@ const assignIssue = async (req, res) => {
       });
     }
 
+    // Find issue
     const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
@@ -210,6 +272,7 @@ const assignIssue = async (req, res) => {
       });
     }
 
+    // Find selected user
     const user = await User.findById(assignee);
 
     if (!user) {
@@ -218,12 +281,34 @@ const assignIssue = async (req, res) => {
       });
     }
 
+    // User must be Developer
     if (user.role !== "Developer") {
       return res.status(400).json({
         message: "Issue can only be assigned to a Developer",
       });
     }
 
+    // Find the issue project
+    const project = await Project.findById(issue.project);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    // Developer must already belong to project
+    const isProjectMember = project.members.some(
+      (member) => member.toString() === user._id.toString(),
+    );
+
+    if (!isProjectMember) {
+      return res.status(400).json({
+        message: "Developer must be added to this project before assignment",
+      });
+    }
+
+    // Assign
     issue.assignee = user._id;
 
     await issue.save();
@@ -395,11 +480,80 @@ const deleteIssue = async (req, res) => {
 };
 
 // ======================================
+// GET MY ISSUES
+// ======================================
+const getMyIssues = async (req, res) => {
+  try {
+    const { search, status, priority, project } = req.query;
+
+    const filter = {};
+
+    // Search
+    if (search) {
+      filter.title = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    // Priority filter
+    if (priority) {
+      filter.priority = priority;
+    }
+
+    // Project filter
+    if (project) {
+      filter.project = project;
+    }
+
+    // ==========================
+    // ROLE BASED FILTER
+    // ==========================
+
+    if (req.user.role === "Developer") {
+      // Developer only sees assigned issues
+      filter.assignee = req.user._id;
+
+      if (status) {
+        filter.status = status;
+      }
+    } else if (req.user.role === "Tester") {
+      // Tester only sees Testing issues
+      filter.status = "Testing";
+    } else if (
+      req.user.role === "Admin" ||
+      req.user.role === "Project Manager"
+    ) {
+      // Admin / PM can see all
+      if (status) {
+        filter.status = status;
+      }
+    }
+
+    const issues = await Issue.find(filter)
+      .populate("project", "name")
+      .populate("reporter", "name email role")
+      .populate("assignee", "name email role")
+      .sort({
+        createdAt: -1,
+      });
+
+    res.status(200).json(issues);
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+// ======================================
 // EXPORTS
 // ======================================
 module.exports = {
   createIssue,
   getIssues,
+  getMyIssues,
   getIssueById,
   updateIssueStatus,
   assignIssue,

@@ -104,12 +104,12 @@ const addProjectMember = async (req, res) => {
     }
 
     const alreadyMember = project.members.some(
-      (member) => member.toString() === userId,
+      (member) => member.toString() === userId.toString(),
     );
 
     if (alreadyMember) {
       return res.status(400).json({
-        message: "User is already a project member",
+        message: "User is already a member of this project",
       });
     }
 

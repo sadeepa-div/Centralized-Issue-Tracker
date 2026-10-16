@@ -42,7 +42,7 @@ function CreateIssue() {
       }
 
       setProjects(data);
-    } catch (error) {
+    } catch {
       showToast("Cannot load projects", "error");
     }
   };
@@ -131,7 +131,7 @@ function CreateIssue() {
       } else {
         navigate("/issues");
       }
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     } finally {
       setLoading(false);

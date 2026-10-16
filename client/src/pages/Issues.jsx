@@ -24,21 +24,18 @@ function Issues() {
   // ======================================
   const fetchProjects = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/projects`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/projects`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (response.ok) {
         setProjects(data);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
     }
   };
@@ -48,21 +45,18 @@ function Issues() {
   // ======================================
   const fetchDevelopers = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/users/developers`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/users/developers`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (response.ok) {
         setDevelopers(data);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
     }
   };
@@ -102,7 +96,7 @@ function Issues() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -115,7 +109,7 @@ function Issues() {
 
       setIssues(data);
       setMessage("");
-    } catch (error) {
+    } catch {
       setMessage("Cannot connect to server");
     } finally {
       setLoading(false);
@@ -139,13 +133,7 @@ function Issues() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [
-    search,
-    status,
-    priority,
-    project,
-    assignee,
-  ]);
+  }, [search, status, priority, project, assignee]);
 
   // ======================================
   // CLEAR FILTERS
@@ -158,12 +146,7 @@ function Issues() {
     setAssignee("");
   };
 
-  const hasFilters =
-    search ||
-    status ||
-    priority ||
-    project ||
-    assignee;
+  const hasFilters = search || status || priority || project || assignee;
 
   // ======================================
   // CSS CLASS HELPERS
@@ -185,28 +168,21 @@ function Issues() {
       <Sidebar />
 
       <main className="dashboard-content">
-
         {/* PAGE HEADER */}
         <div className="page-header issues-page-header">
           <div>
             <h1>Issues</h1>
 
-            <p>
-              Search, filter and manage reported issues.
-            </p>
+            <p>Search, filter and manage reported issues.</p>
           </div>
 
-          <Link
-            to="/create-issue"
-            className="create-issue-link"
-          >
+          <Link to="/create-issue" className="create-issue-link">
             + Create Issue
           </Link>
         </div>
 
         {/* FILTER AREA */}
         <div className="issue-filter-panel">
-
           <div className="issue-search-box">
             <span>⌕</span>
 
@@ -214,47 +190,30 @@ function Issues() {
               type="text"
               placeholder="Search issue title..."
               value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
+              onChange={(event) => setSearch(event.target.value)}
             />
           </div>
 
           <div className="issue-filter-grid">
-
             {/* STATUS */}
             <div className="filter-field">
               <label>Status</label>
 
               <select
                 value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value)
-                }
+                onChange={(event) => setStatus(event.target.value)}
               >
-                <option value="">
-                  All Statuses
-                </option>
+                <option value="">All Statuses</option>
 
-                <option value="Open">
-                  Open
-                </option>
+                <option value="Open">Open</option>
 
-                <option value="In Progress">
-                  In Progress
-                </option>
+                <option value="In Progress">In Progress</option>
 
-                <option value="Testing">
-                  Testing
-                </option>
+                <option value="Testing">Testing</option>
 
-                <option value="Resolved">
-                  Resolved
-                </option>
+                <option value="Resolved">Resolved</option>
 
-                <option value="Closed">
-                  Closed
-                </option>
+                <option value="Closed">Closed</option>
               </select>
             </div>
 
@@ -264,29 +223,17 @@ function Issues() {
 
               <select
                 value={priority}
-                onChange={(event) =>
-                  setPriority(event.target.value)
-                }
+                onChange={(event) => setPriority(event.target.value)}
               >
-                <option value="">
-                  All Priorities
-                </option>
+                <option value="">All Priorities</option>
 
-                <option value="Low">
-                  Low
-                </option>
+                <option value="Low">Low</option>
 
-                <option value="Medium">
-                  Medium
-                </option>
+                <option value="Medium">Medium</option>
 
-                <option value="High">
-                  High
-                </option>
+                <option value="High">High</option>
 
-                <option value="Critical">
-                  Critical
-                </option>
+                <option value="Critical">Critical</option>
               </select>
             </div>
 
@@ -296,19 +243,12 @@ function Issues() {
 
               <select
                 value={project}
-                onChange={(event) =>
-                  setProject(event.target.value)
-                }
+                onChange={(event) => setProject(event.target.value)}
               >
-                <option value="">
-                  All Projects
-                </option>
+                <option value="">All Projects</option>
 
                 {projects.map((item) => (
-                  <option
-                    key={item._id}
-                    value={item._id}
-                  >
+                  <option key={item._id} value={item._id}>
                     {item.name}
                   </option>
                 ))}
@@ -321,32 +261,21 @@ function Issues() {
 
               <select
                 value={assignee}
-                onChange={(event) =>
-                  setAssignee(event.target.value)
-                }
+                onChange={(event) => setAssignee(event.target.value)}
               >
-                <option value="">
-                  All Developers
-                </option>
+                <option value="">All Developers</option>
 
-                {developers.map(
-                  (developer) => (
-                    <option
-                      key={developer._id}
-                      value={developer._id}
-                    >
-                      {developer.name}
-                    </option>
-                  )
-                )}
+                {developers.map((developer) => (
+                  <option key={developer._id} value={developer._id}>
+                    {developer.name}
+                  </option>
+                ))}
               </select>
             </div>
-
           </div>
 
           {/* FILTER FOOTER */}
           <div className="filter-footer">
-
             <p>
               {loading
                 ? "Loading issues..."
@@ -364,17 +293,11 @@ function Issues() {
                 Clear Filters
               </button>
             )}
-
           </div>
-
         </div>
 
         {/* ERROR */}
-        {message && (
-          <p className="error-message">
-            {message}
-          </p>
-        )}
+        {message && <p className="error-message">{message}</p>}
 
         {/* ISSUE LIST */}
         {loading ? (
@@ -387,124 +310,77 @@ function Issues() {
           <div className="empty-issues">
             <h3>No Issues Found</h3>
 
-            <p>
-              Try changing your search or filters.
-            </p>
+            <p>Try changing your search or filters.</p>
 
             {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-              >
+              <button type="button" onClick={clearFilters}>
                 Clear Filters
               </button>
             )}
           </div>
         ) : (
           <div className="modern-issue-list">
-
             {issues.map((issue) => (
               <Link
                 key={issue._id}
                 to={`/issues/${issue._id}`}
                 className="modern-issue-card"
               >
-
                 {/* TOP */}
                 <div className="issue-card-top">
-
                   <div className="issue-card-title">
                     <h3>{issue.title}</h3>
 
-                    <p>
-                      {issue.description}
-                    </p>
+                    <p>{issue.description}</p>
                   </div>
 
-                  <span
-                    className={getPriorityClass(
-                      issue.priority
-                    )}
-                  >
+                  <span className={getPriorityClass(issue.priority)}>
                     {issue.priority}
                   </span>
-
                 </div>
 
                 {/* INFORMATION */}
                 <div className="issue-card-details">
-
                   <div>
-                    <span className="issue-label">
-                      Status
-                    </span>
+                    <span className="issue-label">Status</span>
 
-                    <span
-                      className={getStatusClass(
-                        issue.status
-                      )}
-                    >
+                    <span className={getStatusClass(issue.status)}>
                       {issue.status}
                     </span>
                   </div>
 
                   <div>
-                    <span className="issue-label">
-                      Project
-                    </span>
+                    <span className="issue-label">Project</span>
 
-                    <strong>
-                      {issue.project?.name ||
-                        "No Project"}
-                    </strong>
+                    <strong>{issue.project?.name || "No Project"}</strong>
                   </div>
 
                   <div>
-                    <span className="issue-label">
-                      Assigned To
-                    </span>
+                    <span className="issue-label">Assigned To</span>
 
-                    <strong>
-                      {issue.assignee?.name ||
-                        "Unassigned"}
-                    </strong>
+                    <strong>{issue.assignee?.name || "Unassigned"}</strong>
                   </div>
 
                   <div>
-                    <span className="issue-label">
-                      Type
-                    </span>
+                    <span className="issue-label">Type</span>
 
-                    <strong>
-                      {issue.type}
-                    </strong>
+                    <strong>{issue.type}</strong>
                   </div>
-
                 </div>
 
                 {/* FOOTER */}
                 <div className="issue-card-footer">
-
                   <span>
                     Reported by{" "}
-                    <strong>
-                      {issue.reporter?.name ||
-                        "Unknown"}
-                    </strong>
+                    <strong>{issue.reporter?.name || "Unknown"}</strong>
                   </span>
 
-                  <span className="view-issue-text">
-                    View Issue →
-                  </span>
-
+                  <span className="view-issue-text">View Issue →</span>
                 </div>
-
               </Link>
             ))}
-
           </div>
         )}
-
       </main>
     </div>
   );

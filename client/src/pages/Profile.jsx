@@ -37,7 +37,7 @@ function Profile() {
       setProfile(data.user);
 
       return data.user;
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
 
       return null;
@@ -60,8 +60,8 @@ function Profile() {
       if (response.ok) {
         setIssues(data);
       }
-    } catch (error) {
-      console.error(error);
+    } catch {
+      showToast("Cannot connect to server", "error");
     }
   };
 
@@ -218,7 +218,7 @@ function Profile() {
 
             <div>
               <span>User ID</span>
-              <strong className="profile-user-id">{profile._id}</strong>
+              <strong className="profile-user-id">{profile.id}</strong>
             </div>
           </div>
         </div>

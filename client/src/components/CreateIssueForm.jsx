@@ -1,83 +1,83 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import API_BASE_URL from '../config/api'
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../config/api";
 
 function CreateIssueForm() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [type, setType] = useState('Bug')
-  const [priority, setPriority] = useState('Medium')
-  const [project, setProject] = useState('')
-  const [projects, setProjects] = useState([])
-  const [message, setMessage] = useState('')
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState("Bug");
+  const [priority, setPriority] = useState("Medium");
+  const [project, setProject] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [message, setMessage] = useState("");
 
-  const navigate = useNavigate()
-  const token = localStorage.getItem('token')
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/projects`, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (!response.ok) {
-          setMessage(data.message)
-          return
+          setMessage(data.message);
+          return;
         }
 
-        setProjects(data)
+        setProjects(data);
 
         if (data.length > 0) {
-          setProject(data[0]._id)
+          setProject(data[0]._id);
         }
-      } catch (error) {
-        setMessage('Cannot connect to server')
+      } catch {
+        setMessage("Cannot connect to server");
       }
-    }
+    };
 
-    fetchProjects()
-  }, [token])
+    fetchProjects();
+  }, [token]);
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
     try {
       const response = await fetch(`${API_BASE_URL}/issues`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title,
           description,
           type,
           priority,
-          project
-        })
-      })
+          project,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message)
-        return
+        setMessage(data.message);
+        return;
       }
 
-      setTitle('')
-      setDescription('')
-      setType('Bug')
-      setPriority('Medium')
-      navigate('/issues')
-    } catch (error) {
-      setMessage('Cannot connect to server')
+      setTitle("");
+      setDescription("");
+      setType("Bug");
+      setPriority("Medium");
+      navigate("/issues");
+    } catch {
+      setMessage("Cannot connect to server");
     }
-  }
+  };
 
   return (
     <div>
@@ -126,7 +126,10 @@ function CreateIssueForm() {
 
         <div className="form-group">
           <label>Issue Type</label>
-          <select value={type} onChange={(event) => setType(event.target.value)}>
+          <select
+            value={type}
+            onChange={(event) => setType(event.target.value)}
+          >
             <option value="Bug">Bug</option>
             <option value="Task">Task</option>
             <option value="Feature">Feature</option>
@@ -135,7 +138,10 @@ function CreateIssueForm() {
 
         <div className="form-group">
           <label>Priority</label>
-          <select value={priority} onChange={(event) => setPriority(event.target.value)}>
+          <select
+            value={priority}
+            onChange={(event) => setPriority(event.target.value)}
+          >
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
             <option value="High">High</option>
@@ -148,7 +154,7 @@ function CreateIssueForm() {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
-export default CreateIssueForm
+export default CreateIssueForm;

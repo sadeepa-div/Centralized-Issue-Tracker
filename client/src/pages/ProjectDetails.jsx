@@ -44,7 +44,7 @@ function ProjectDetails() {
       }
 
       setProject(data);
-    } catch (error) {
+    } catch {
       setMessage("Cannot connect to server");
     }
   };
@@ -65,7 +65,7 @@ function ProjectDetails() {
       if (response.ok) {
         setUsers(data);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
     }
   };
@@ -86,7 +86,7 @@ function ProjectDetails() {
       if (response.ok) {
         setIssues(data);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
     }
   };
@@ -143,7 +143,7 @@ function ProjectDetails() {
       setSelectedUser("");
 
       fetchProject();
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -181,7 +181,7 @@ function ProjectDetails() {
       showToast("Member removed successfully", "success");
 
       fetchProject();
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -265,7 +265,7 @@ function ProjectDetails() {
       setTimeout(() => {
         navigate("/projects");
       }, 500);
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     }
   };

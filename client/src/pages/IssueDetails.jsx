@@ -35,6 +35,22 @@ function IssueDetails() {
 
   const user = storedUser ? JSON.parse(storedUser) : null;
 
+  const getAllowedStatuses = () => {
+    if (user?.role === "Admin" || user?.role === "Project Manager") {
+      return ["Open", "In Progress", "Testing", "Resolved", "Closed"];
+    }
+
+    if (user?.role === "Developer") {
+      return ["Open", "In Progress", "Testing"];
+    }
+
+    if (user?.role === "Tester") {
+      return ["In Progress", "Resolved"];
+    }
+
+    return [];
+  };
+
   const canManageIssue =
     user?.role === "Admin" || user?.role === "Project Manager";
 
@@ -60,6 +76,10 @@ function IssueDetails() {
 
       setIssue(data);
 
+      if (canAssign && data.project?._id) {
+        await fetchDevelopers(data.project._id);
+      }
+
       setStatus(data.status || "Open");
 
       setAssignee(data.assignee?._id || "");
@@ -71,7 +91,7 @@ function IssueDetails() {
       setEditType(data.type || "Bug");
 
       setEditPriority(data.priority || "Medium");
-    } catch (error) {
+    } catch {
       setMessage("Cannot connect to server");
     }
   };
@@ -79,21 +99,34 @@ function IssueDetails() {
   // ======================================
   // FETCH DEVELOPERS
   // ======================================
-  const fetchDevelopers = async () => {
+  const fetchDevelopers = async (projectId) => {
+    if (!projectId) {
+      setDevelopers([]);
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/users/developers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/users/project/${projectId}/developers`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await response.json();
 
-      if (response.ok) {
-        setDevelopers(data);
+      if (!response.ok) {
+        setDevelopers([]);
+        return;
       }
+
+      setDevelopers(data);
     } catch (error) {
       console.error(error);
+
+      setDevelopers([]);
     }
   };
 
@@ -110,11 +143,18 @@ function IssueDetails() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setComments(data);
+      if (!response.ok) {
+        setComments([]);
+        return;
       }
-    } catch (error) {
-      console.error(error);
+
+      if (Array.isArray(data)) {
+        setComments(data);
+      } else {
+        setComments(data.comments || []);
+      }
+    } catch {
+      setComments([]);
     }
   };
 
@@ -125,11 +165,7 @@ function IssueDetails() {
     const loadData = async () => {
       setLoading(true);
 
-      await Promise.all([
-        fetchIssue(),
-        fetchComments(),
-        canAssign ? fetchDevelopers() : Promise.resolve(),
-      ]);
+      await Promise.all([fetchIssue(), fetchComments()]);
 
       setLoading(false);
     };
@@ -166,7 +202,7 @@ function IssueDetails() {
       showToast("Issue status updated successfully", "success");
 
       fetchIssue();
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -206,7 +242,7 @@ function IssueDetails() {
       showToast("Issue assigned successfully", "success");
 
       fetchIssue();
-    } catch (error) {
+    } catch  {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -250,7 +286,7 @@ function IssueDetails() {
       showToast("Comment added successfully", "success");
 
       fetchComments();
-    } catch (error) {
+    } catch  {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -294,7 +330,7 @@ function IssueDetails() {
       setEditMode(false);
 
       fetchIssue();
-    } catch (error) {
+    } catch  {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -333,7 +369,7 @@ function IssueDetails() {
       setTimeout(() => {
         navigate("/issues");
       }, 500);
-    } catch (error) {
+    } catch  {
       showToast("Cannot connect to server", "error");
     }
   };
@@ -622,19 +658,14 @@ function IssueDetails() {
               <h3>Update Status</h3>
 
               <select
-                className="side-select"
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
               >
-                <option value="Open">Open</option>
-
-                <option value="In Progress">In Progress</option>
-
-                <option value="Testing">Testing</option>
-
-                <option value="Resolved">Resolved</option>
-
-                <option value="Closed">Closed</option>
+                {getAllowedStatuses().map((statusOption) => (
+                  <option key={statusOption} value={statusOption}>
+                    {statusOption}
+                  </option>
+                ))}
               </select>
 
               <button

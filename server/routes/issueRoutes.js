@@ -1,67 +1,54 @@
-const express = require('express')
+const express = require("express");
 
 const {
   createIssue,
   getIssues,
+  getMyIssues,
   getIssueById,
   updateIssueStatus,
   assignIssue,
   getIssueStats,
   updateIssue,
-  deleteIssue
-} = require('../controllers/issueController')
+  deleteIssue,
+} = require("../controllers/issueController");
 
-const {
-  protect
-} = require('../middleware/authMiddleware')
+const { protect } = require("../middleware/authMiddleware");
 
-const {
-  authorizeRoles
-} = require('../middleware/roleMiddleware')
+const { authorizeRoles } = require("../middleware/roleMiddleware");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/', protect, getIssues)
+router.get("/", protect, getIssues);
 
-router.get(
-  '/stats/summary',
-  protect,
-  getIssueStats
-)
+router.get("/my", protect, getMyIssues);
 
-router.post('/', protect, createIssue)
+router.get("/stats/summary", protect, getIssueStats);
 
-router.get(
-  '/:id',
-  protect,
-  getIssueById
-)
+router.post("/", protect, createIssue);
+
+router.get("/:id", protect, getIssueById);
+
+router.patch("/:id/status", protect, updateIssueStatus);
 
 router.patch(
-  '/:id/status',
+  "/:id/assignee",
   protect,
-  updateIssueStatus
-)
+  authorizeRoles("Admin", "Project Manager"),
+  assignIssue,
+);
 
 router.patch(
-  '/:id/assignee',
+  "/:id",
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  assignIssue
-)
-
-router.patch(
-  '/:id',
-  protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  updateIssue
-)
+  authorizeRoles("Admin", "Project Manager"),
+  updateIssue,
+);
 
 router.delete(
-  '/:id',
+  "/:id",
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  deleteIssue
-)
+  authorizeRoles("Admin", "Project Manager"),
+  deleteIssue,
+);
 
-module.exports = router
+module.exports = router;

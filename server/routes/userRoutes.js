@@ -1,18 +1,19 @@
-const express = require('express')
+const express = require("express");
 
 const {
   getDevelopers,
-  getTeamUsers
-} = require('../controllers/userController')
+  getTeamUsers,
+  getProjectDevelopers,
+} = require("../controllers/userController");
 
-const {
-  protect
-} = require('../middleware/authMiddleware')
+const { protect } = require("../middleware/authMiddleware");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/developers', protect, getDevelopers)
+router.get("/developers", protect, getDevelopers);
 
-router.get('/team', protect, getTeamUsers)
+router.get("/team", protect, getTeamUsers);
 
-module.exports = router
+router.get("/project/:projectId/developers", protect, getProjectDevelopers);
+
+module.exports = router;

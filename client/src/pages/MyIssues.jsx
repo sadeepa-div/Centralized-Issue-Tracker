@@ -1,219 +1,266 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import API_BASE_URL from "../config/api";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  Search,
+  RotateCcw,
+} from "lucide-react";
+
 import Sidebar from "../components/Sidebar";
+import API_BASE_URL from "../config/api";
 
 function MyIssues() {
-  const [issues, setIssues] = useState([]);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const [statusFilter, setStatusFilter] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
+  const token =
+    localStorage.getItem("token");
 
-  const token = localStorage.getItem("token");
-
-  const storedUser = localStorage.getItem("user");
+  const storedUser =
+    localStorage.getItem("user");
 
   const user = storedUser
     ? JSON.parse(storedUser)
     : null;
 
+  const [issues, setIssues] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [search, setSearch] =
+    useState("");
+
+  const [status, setStatus] =
+    useState("");
+
+  const [priority, setPriority] =
+    useState("");
+
+  // ==========================
+  // LOAD MY ISSUES
+  // ==========================
   const fetchMyIssues = async () => {
     try {
       setLoading(true);
 
-      const params = new URLSearchParams();
+      const params =
+        new URLSearchParams();
 
-      if (user?.role === "Developer") {
-        params.append("assignee", user.id);
+      if (search.trim()) {
+        params.set(
+          "search",
+          search.trim()
+        );
       }
 
-      if (user?.role === "Tester") {
-        params.append("status", "Testing");
+      if (
+        status &&
+        user?.role !== "Tester"
+      ) {
+        params.set(
+          "status",
+          status
+        );
       }
 
-      if (statusFilter) {
-        params.set("status", statusFilter);
+      if (priority) {
+        params.set(
+          "priority",
+          priority
+        );
       }
 
-      if (priorityFilter) {
-        params.append("priority", priorityFilter);
-      }
+      const query =
+        params.toString();
 
-      const response = await fetch(
-        `${API_BASE_URL}/issues?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response =
+        await fetch(
+          `${API_BASE_URL}/issues/my${
+            query
+              ? `?${query}`
+              : ""
+          }`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
         setIssues([]);
         return;
       }
 
       setIssues(data);
-      setMessage("");
+
     } catch (error) {
-      setMessage("Cannot connect to server");
+      console.error(error);
+      setIssues([]);
+
     } finally {
       setLoading(false);
     }
   };
 
+  // ==========================
+  // SEARCH DELAY
+  // ==========================
   useEffect(() => {
-    fetchMyIssues();
-  }, [statusFilter, priorityFilter]);
+    const timer =
+      setTimeout(() => {
+        fetchMyIssues();
+      }, 300);
 
-  const pageTitle = () => {
-    if (user?.role === "Developer") {
-      return "My Assigned Issues";
-    }
+    return () =>
+      clearTimeout(timer);
 
-    if (user?.role === "Tester") {
-      return "Testing Workspace";
-    }
+  }, [
+    search,
+    status,
+    priority,
+  ]);
 
-    if (user?.role === "Project Manager") {
-      return "Project Issues";
-    }
-
-    if (user?.role === "Admin") {
-      return "All Issues";
-    }
-
-    return "My Issues";
+  // ==========================
+  // CLEAR FILTERS
+  // ==========================
+  const clearFilters = () => {
+    setSearch("");
+    setStatus("");
+    setPriority("");
   };
 
-  const pageDescription = () => {
-    if (user?.role === "Developer") {
+  // ==========================
+  // SUMMARY
+  // ==========================
+  const total =
+    issues.length;
+
+  const open =
+    issues.filter(
+      (issue) =>
+        issue.status === "Open"
+    ).length;
+
+  const active =
+    issues.filter(
+      (issue) =>
+        issue.status ===
+          "In Progress" ||
+        issue.status ===
+          "Testing"
+    ).length;
+
+  const completed =
+    issues.filter(
+      (issue) =>
+        issue.status ===
+          "Resolved" ||
+        issue.status ===
+          "Closed"
+    ).length;
+
+  // ==========================
+  // ROLE MESSAGE
+  // ==========================
+  const getRoleMessage = () => {
+    if (
+      user?.role === "Developer"
+    ) {
       return "Issues currently assigned to you.";
     }
 
-    if (user?.role === "Tester") {
-      return "Issues currently ready for testing.";
+    if (
+      user?.role === "Tester"
+    ) {
+      return "Issues currently waiting for testing.";
     }
 
-    return "View and manage issue activity.";
-  };
-
-  const openCount = issues.filter(
-    (issue) => issue.status === "Open"
-  ).length;
-
-  const inProgressCount = issues.filter(
-    (issue) => issue.status === "In Progress"
-  ).length;
-
-  const testingCount = issues.filter(
-    (issue) => issue.status === "Testing"
-  ).length;
-
-  const completedCount = issues.filter(
-    (issue) =>
-      issue.status === "Resolved" ||
-      issue.status === "Closed"
-  ).length;
-
-  const clearFilters = () => {
-    setStatusFilter("");
-    setPriorityFilter("");
-  };
-
-  const getStatusClass = (status) => {
-    return `status-badge status-${status
-      ?.toLowerCase()
-      .replaceAll(" ", "-")}`;
-  };
-
-  const getPriorityClass = (priority) => {
-    return `priority-badge priority-${priority
-      ?.toLowerCase()
-      .replaceAll(" ", "-")}`;
+    return "Monitor and manage issues across the workspace.";
   };
 
   return (
     <div className="dashboard-page">
+
       <Sidebar />
 
       <main className="dashboard-content">
 
         {/* HEADER */}
         <div className="my-issues-header">
-
           <div>
-            <h1>{pageTitle()}</h1>
+            <h1>My Issues</h1>
 
-            <p>{pageDescription()}</p>
-
-            {user && (
-              <span className="current-role">
-                {user.name} • {user.role}
-              </span>
-            )}
+            <p>
+              {getRoleMessage()}
+            </p>
           </div>
-
-          <Link
-            to="/create-issue"
-            className="create-issue-link"
-          >
-            + Create Issue
-          </Link>
-
         </div>
 
-        {message && (
-          <p className="error-message">
-            {message}
-          </p>
-        )}
-
         {/* SUMMARY */}
-        <div className="my-issue-summary">
+        <div className="my-issues-stats">
 
           <div className="my-issue-stat">
             <span>Total</span>
-            <strong>{issues.length}</strong>
+            <strong>{total}</strong>
           </div>
 
           <div className="my-issue-stat">
             <span>Open</span>
-            <strong>{openCount}</strong>
+            <strong>{open}</strong>
           </div>
 
           <div className="my-issue-stat">
-            <span>In Progress</span>
-            <strong>{inProgressCount}</strong>
-          </div>
-
-          <div className="my-issue-stat">
-            <span>Testing</span>
-            <strong>{testingCount}</strong>
+            <span>Active</span>
+            <strong>{active}</strong>
           </div>
 
           <div className="my-issue-stat">
             <span>Completed</span>
-            <strong>{completedCount}</strong>
+            <strong>
+              {completed}
+            </strong>
           </div>
 
         </div>
 
         {/* FILTERS */}
-        <div className="my-issue-filters">
+        <div className="issue-filter-panel">
 
-          <div>
-            <label>Status</label>
+          <div className="issue-search-box">
+            <Search size={18} />
 
-            <select
-              value={statusFilter}
+            <input
+              type="text"
+              placeholder="Search issues..."
+              value={search}
               onChange={(event) =>
-                setStatusFilter(event.target.value)
+                setSearch(
+                  event.target.value
+                )
+              }
+            />
+          </div>
+
+          {user?.role !==
+            "Tester" && (
+            <select
+              value={status}
+              onChange={(event) =>
+                setStatus(
+                  event.target.value
+                )
               }
             >
               <option value="">
@@ -240,154 +287,150 @@ function MyIssues() {
                 Closed
               </option>
             </select>
-          </div>
-
-          <div>
-            <label>Priority</label>
-
-            <select
-              value={priorityFilter}
-              onChange={(event) =>
-                setPriorityFilter(event.target.value)
-              }
-            >
-              <option value="">
-                All Priorities
-              </option>
-
-              <option value="Low">
-                Low
-              </option>
-
-              <option value="Medium">
-                Medium
-              </option>
-
-              <option value="High">
-                High
-              </option>
-
-              <option value="Critical">
-                Critical
-              </option>
-            </select>
-          </div>
-
-          {(statusFilter || priorityFilter) && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="clear-filter-button"
-            >
-              Clear Filters
-            </button>
           )}
+
+          <select
+            value={priority}
+            onChange={(event) =>
+              setPriority(
+                event.target.value
+              )
+            }
+          >
+            <option value="">
+              All Priorities
+            </option>
+
+            <option value="Low">
+              Low
+            </option>
+
+            <option value="Medium">
+              Medium
+            </option>
+
+            <option value="High">
+              High
+            </option>
+
+            <option value="Critical">
+              Critical
+            </option>
+          </select>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="clear-filter-button"
+          >
+            <RotateCcw size={16} />
+            Clear
+          </button>
 
         </div>
 
-        {/* ISSUE LIST */}
+        {/* ISSUES */}
         {loading ? (
-          <div className="issues-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading issues...</p>
+          <div className="loading-state">
+            Loading issues...
           </div>
         ) : issues.length === 0 ? (
-          <div className="empty-my-issues">
-
-            <h3>No Issues Found</h3>
+          <div className="empty-state">
+            <h3>
+              No issues found
+            </h3>
 
             <p>
-              There are no issues matching your current view.
+              There are currently no
+              issues for this workspace.
             </p>
-
           </div>
         ) : (
-          <div className="my-issues-grid">
+          <div className="my-issues-list">
 
             {issues.map((issue) => (
-              <Link
-                to={`/issues/${issue._id}`}
+              <div
                 key={issue._id}
                 className="my-issue-card"
+                onClick={() =>
+                  navigate(
+                    `/issues/${issue._id}`
+                  )
+                }
               >
 
                 <div className="my-issue-card-top">
 
                   <div>
-                    <h3>{issue.title}</h3>
+                    <span className="type-badge">
+                      {issue.type}
+                    </span>
 
-                    <p>
-                      {issue.project?.name ||
-                        "No Project"}
-                    </p>
+                    <h3>
+                      {issue.title}
+                    </h3>
                   </div>
 
                   <span
-                    className={getPriorityClass(
-                      issue.priority
-                    )}
+                    className={`priority-badge priority-${issue.priority
+                      ?.toLowerCase()}`}
                   >
                     {issue.priority}
                   </span>
 
                 </div>
 
-                <div className="my-issue-description">
+                <p>
                   {issue.description}
-                </div>
+                </p>
 
-                <div className="my-issue-meta">
+                <div className="my-issue-card-bottom">
 
                   <div>
-                    <span>Status</span>
+                    <span>
+                      Project
+                    </span>
 
                     <strong>
-                      <span
-                        className={getStatusClass(
-                          issue.status
-                        )}
-                      >
-                        {issue.status}
-                      </span>
+                      {issue.project
+                        ?.name ||
+                        "No Project"}
                     </strong>
                   </div>
 
                   <div>
-                    <span>Type</span>
-                    <strong>{issue.type}</strong>
-                  </div>
+                    <span>
+                      Assignee
+                    </span>
 
-                  <div>
-                    <span>Assignee</span>
                     <strong>
-                      {issue.assignee?.name ||
+                      {issue.assignee
+                        ?.name ||
                         "Unassigned"}
                     </strong>
                   </div>
 
-                </div>
-
-                <div className="my-issue-footer">
-
-                  <span>
-                    Reported by{" "}
-                    {issue.reporter?.name ||
-                      "Unknown"}
+                  <span
+                    className={`status-badge status-${issue.status
+                      ?.toLowerCase()
+                      .replaceAll(
+                        " ",
+                        "-"
+                      )}`}
+                  >
+                    {issue.status}
                   </span>
 
-                  <strong>
-                    Open Issue →
-                  </strong>
-
                 </div>
 
-              </Link>
+              </div>
             ))}
 
           </div>
         )}
 
       </main>
+
     </div>
   );
 }

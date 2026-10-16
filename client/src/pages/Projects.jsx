@@ -47,7 +47,7 @@ function Projects() {
       }
 
       setProjects(data);
-    } catch (error) {
+    } catch {
       setMessage("Cannot connect to server");
     }
   };
@@ -68,7 +68,7 @@ function Projects() {
       if (response.ok) {
         setIssues(data);
       }
-    } catch (error) {
+    } catch {
       console.error(error);
     }
   };
@@ -130,7 +130,7 @@ function Projects() {
       setShowCreateForm(false);
 
       fetchProjects();
-    } catch (error) {
+    } catch {
       showToast("Cannot connect to server", "error");
     }
   };
