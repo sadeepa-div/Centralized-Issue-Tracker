@@ -1,114 +1,347 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import API_BASE_URL from '../config/api'
+import { useState } from "react";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  User,
+  Mail,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  UserRoundCog,
+  ArrowRight,
+  Bug,
+} from "lucide-react";
+
+import API_BASE_URL from "../config/api";
+import { useToast } from "../context/ToastContext";
 
 function Register() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('Developer')
-  const [message, setMessage] = useState('')
+  const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const navigate = useNavigate()
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] =
+    useState("");
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const [role, setRole] =
+    useState("Developer");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const handleRegister = async (
+    event
+  ) => {
+    event.preventDefault();
+
+    if (
+      !name.trim() ||
+      !email.trim() ||
+      !password.trim()
+    ) {
+      showToast(
+        "Please complete all fields",
+        "error"
+      );
+
+      return;
+    }
+
+    if (password.length < 6) {
+      showToast(
+        "Password must contain at least 6 characters",
+        "error"
+      );
+
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-        }),
-      })
+      setLoading(true);
 
-      const data = await response.json()
+      const response = await fetch(
+        `${API_BASE_URL}/auth/register`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            password,
+            role,
+          }),
+        }
+      );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        setMessage(data.message)
-        return
+        showToast(
+          data.message ||
+            "Registration failed",
+          "error"
+        );
+
+        return;
       }
 
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      showToast(
+        "Account created successfully",
+        "success"
+      );
 
-      navigate('/dashboard')
+      setTimeout(() => {
+        navigate("/login");
+      }, 600);
     } catch (error) {
-      setMessage('Cannot connect to server')
+      showToast(
+        "Cannot connect to server",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2>Create Account</h2>
+    <div className="premium-register-page">
 
-        {message && <p className="error-message">{message}</p>}
+      <div className="register-background-overlay" />
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name</label>
+      {/* LEFT SIDE */}
+      <section className="register-visual-side">
 
-            <input
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-            />
+        <div className="register-visual-content">
+
+          <div className="visual-badge">
+            START YOUR WORKSPACE
           </div>
 
-          <div className="form-group">
-            <label>Email</label>
+          <h1>
+            Join your team.
+            <br />
+            Track work better.
+          </h1>
 
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
+          <p>
+            Create your BugFlow account and
+            start managing issues, projects,
+            assignments and progress from one
+            centralized workspace.
+          </p>
+
+        </div>
+
+        <div className="login-bottom-text">
+          Centralized Issue & Bug Tracking System
+        </div>
+
+      </section>
+
+      {/* REGISTER PANEL */}
+      <section className="register-panel-wrapper">
+
+        <div className="glass-register-card">
+
+          {/* BRAND */}
+          <div className="login-brand">
+
+            <div className="login-brand-icon">
+              <Bug size={30} />
+            </div>
+
+            <div>
+              <h2>
+                Bug<span>Flow</span>
+              </h2>
+
+              <p>
+                Issue Tracking System
+              </p>
+            </div>
+
           </div>
 
-          <div className="form-group">
-            <label>Password</label>
+          {/* HEADING */}
+          <div className="register-heading">
 
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+            <h1>
+              Create Account
+            </h1>
+
+            <p>
+              Join BugFlow and start managing
+              your work
+            </p>
+
           </div>
 
-          <div className="form-group">
-            <label>Role</label>
+          {/* FORM */}
+          <form
+            className="premium-register-form"
+            onSubmit={handleRegister}
+          >
 
-            <select
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
+            {/* NAME */}
+            <div className="premium-input-group">
+
+              <User size={19} />
+
+              <input
+                type="text"
+                placeholder="Full name"
+                value={name}
+                onChange={(event) =>
+                  setName(
+                    event.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            {/* EMAIL */}
+            <div className="premium-input-group">
+
+              <Mail size={19} />
+
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(event) =>
+                  setEmail(
+                    event.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            {/* PASSWORD */}
+            <div className="premium-input-group">
+
+              <LockKeyhole size={19} />
+
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                placeholder="Password"
+                value={password}
+                onChange={(event) =>
+                  setPassword(
+                    event.target.value
+                  )
+                }
+              />
+
+              <button
+                type="button"
+                className="password-eye"
+                onClick={() =>
+                  setShowPassword(
+                    !showPassword
+                  )
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={19} />
+                ) : (
+                  <Eye size={19} />
+                )}
+              </button>
+
+            </div>
+
+            {/* ROLE */}
+            <div className="premium-input-group">
+
+              <UserRoundCog size={19} />
+
+              <select
+                value={role}
+                onChange={(event) =>
+                  setRole(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="Developer">
+                  Developer
+                </option>
+
+                <option value="Tester">
+                  Tester
+                </option>
+              </select>
+
+            </div>
+
+            {/* REGISTER BUTTON */}
+            <button
+              type="submit"
+              className="premium-register-button"
+              disabled={loading}
             >
-              <option value="Developer">Developer</option>
-              <option value="Tester">Tester</option>
-              <option value="Project Manager">Project Manager</option>
-            </select>
+              <span>
+                {loading
+                  ? "Creating Account..."
+                  : "CREATE ACCOUNT"}
+              </span>
+
+              {!loading && (
+                <ArrowRight size={20} />
+              )}
+            </button>
+
+          </form>
+
+          {/* DIVIDER */}
+          <div className="login-divider">
+
+            <span />
+
+            <p>or</p>
+
+            <span />
+
           </div>
 
-          <button className="auth-button" type="submit">
-            Register
-          </button>
-        </form>
+          {/* LOGIN */}
+          <div className="login-register">
 
-        <p className="auth-link">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </div>
+            <span>
+              Already have an account?
+            </span>
+
+            <Link to="/login">
+              Login
+            </Link>
+
+          </div>
+
+        </div>
+
+      </section>
+
     </div>
-  )
+  );
 }
 
-export default Register
+export default Register;

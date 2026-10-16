@@ -1,50 +1,56 @@
-const express = require('express')
+const express = require("express");
 
 const {
   createProject,
   getProjects,
   getProjectById,
   addProjectMember,
-  removeProjectMember
-} = require('../controllers/projectController')
+  removeProjectMember,
+  deleteProject,
+} = require("../controllers/projectController");
 
-const {
-  protect
-} = require('../middleware/authMiddleware')
+const { protect } = require("../middleware/authMiddleware");
 
-const {
-  authorizeRoles
-} = require('../middleware/roleMiddleware')
+const { authorizeRoles } = require("../middleware/roleMiddleware");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/', protect, getProjects)
+// Get all projects
+router.get("/", protect, getProjects);
 
+// Create project
 router.post(
-  '/',
+  "/",
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  createProject
-)
+  authorizeRoles("Admin", "Project Manager"),
+  createProject,
+);
 
-router.get(
-  '/:id',
-  protect,
-  getProjectById
-)
+// Get one project
+router.get("/:id", protect, getProjectById);
 
+// Add project member
 router.patch(
-  '/:id/members',
+  "/:id/members",
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  addProjectMember
-)
+  authorizeRoles("Admin", "Project Manager"),
+  addProjectMember,
+);
 
+// Remove project member
 router.delete(
-  '/:id/members/:userId',
+  "/:id/members/:userId",
   protect,
-  authorizeRoles('Admin', 'Project Manager'),
-  removeProjectMember
-)
+  authorizeRoles("Admin", "Project Manager"),
+  removeProjectMember,
+);
 
-module.exports = router
+// Delete project
+router.delete(
+  "/:id",
+  protect,
+  authorizeRoles("Admin", "Project Manager"),
+  deleteProject,
+);
+
+module.exports = router;

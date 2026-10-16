@@ -2,6 +2,9 @@ const Issue = require("../models/Issue");
 const Project = require("../models/Project");
 const User = require("../models/User");
 
+// ======================================
+// CREATE ISSUE
+// ======================================
 const createIssue = async (req, res) => {
   try {
     const { title, description, type, priority, project, assignee } = req.body;
@@ -23,8 +26,8 @@ const createIssue = async (req, res) => {
     const issue = await Issue.create({
       title,
       description,
-      type,
-      priority,
+      type: type || "Bug",
+      priority: priority || "Medium",
       project,
       reporter: req.user._id,
       assignee: assignee || null,
@@ -47,6 +50,9 @@ const createIssue = async (req, res) => {
   }
 };
 
+// ======================================
+// GET ALL ISSUES + SEARCH/FILTER
+// ======================================
 const getIssues = async (req, res) => {
   try {
     const { search, status, priority, project, assignee } = req.query;
@@ -91,6 +97,9 @@ const getIssues = async (req, res) => {
   }
 };
 
+// ======================================
+// GET ONE ISSUE
+// ======================================
 const getIssueById = async (req, res) => {
   try {
     const issue = await Issue.findById(req.params.id)
@@ -113,6 +122,9 @@ const getIssueById = async (req, res) => {
   }
 };
 
+// ======================================
+// UPDATE ISSUE STATUS
+// ======================================
 const updateIssueStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -139,6 +151,23 @@ const updateIssueStatus = async (req, res) => {
       });
     }
 
+    const isAdmin = req.user.role === "Admin";
+
+    const isManager = req.user.role === "Project Manager";
+
+    const isAssignedDeveloper =
+      req.user.role === "Developer" &&
+      issue.assignee &&
+      issue.assignee.toString() === req.user._id.toString();
+
+    const isTester = req.user.role === "Tester" && issue.status === "Testing";
+
+    if (!isAdmin && !isManager && !isAssignedDeveloper && !isTester) {
+      return res.status(403).json({
+        message: "You do not have permission to update this issue status",
+      });
+    }
+
     issue.status = status;
 
     await issue.save();
@@ -160,6 +189,9 @@ const updateIssueStatus = async (req, res) => {
   }
 };
 
+// ======================================
+// ASSIGN ISSUE TO DEVELOPER
+// ======================================
 const assignIssue = async (req, res) => {
   try {
     const { assignee } = req.body;
@@ -213,13 +245,18 @@ const assignIssue = async (req, res) => {
   }
 };
 
+// ======================================
+// DASHBOARD ISSUE STATISTICS
+// ======================================
 const getIssueStats = async (req, res) => {
   try {
     const [
       totalIssues,
       openIssues,
       inProgressIssues,
+      testingIssues,
       resolvedIssues,
+      closedIssues,
       recentIssues,
     ] = await Promise.all([
       Issue.countDocuments(),
@@ -233,7 +270,15 @@ const getIssueStats = async (req, res) => {
       }),
 
       Issue.countDocuments({
+        status: "Testing",
+      }),
+
+      Issue.countDocuments({
         status: "Resolved",
+      }),
+
+      Issue.countDocuments({
+        status: "Closed",
       }),
 
       Issue.find()
@@ -248,7 +293,9 @@ const getIssueStats = async (req, res) => {
       totalIssues,
       openIssues,
       inProgressIssues,
+      testingIssues,
       resolvedIssues,
+      closedIssues,
       recentIssues,
     });
   } catch (error) {
@@ -259,79 +306,104 @@ const getIssueStats = async (req, res) => {
   }
 };
 
+// ======================================
+// EDIT ISSUE
+// ======================================
 const updateIssue = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      type,
-      priority,
-      project
-    } = req.body
+    const { title, description, type, priority, project } = req.body;
 
-    const issue = await Issue.findById(req.params.id)
+    const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
       return res.status(404).json({
-        message: 'Issue not found'
-      })
+        message: "Issue not found",
+      });
     }
 
-    if (title) issue.title = title
-    if (description) issue.description = description
-    if (type) issue.type = type
-    if (priority) issue.priority = priority
-    if (project) issue.project = project
+    if (title) {
+      issue.title = title;
+    }
 
-    await issue.save()
+    if (description) {
+      issue.description = description;
+    }
+
+    if (type) {
+      issue.type = type;
+    }
+
+    if (priority) {
+      issue.priority = priority;
+    }
+
+    if (project) {
+      const existingProject = await Project.findById(project);
+
+      if (!existingProject) {
+        return res.status(404).json({
+          message: "Project not found",
+        });
+      }
+
+      issue.project = project;
+    }
+
+    await issue.save();
 
     const updatedIssue = await Issue.findById(issue._id)
-      .populate('project', 'name')
-      .populate('reporter', 'name email role')
-      .populate('assignee', 'name email role')
+      .populate("project", "name")
+      .populate("reporter", "name email role")
+      .populate("assignee", "name email role");
 
     res.status(200).json({
-      message: 'Issue updated successfully',
-      issue: updatedIssue
-    })
+      message: "Issue updated successfully",
+      issue: updatedIssue,
+    });
   } catch (error) {
     res.status(500).json({
-      message: 'Server error',
-      error: error.message
-    })
+      message: "Server error",
+      error: error.message,
+    });
   }
-}
+};
 
+// ======================================
+// DELETE ISSUE
+// ======================================
 const deleteIssue = async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id)
+    const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
       return res.status(404).json({
-        message: 'Issue not found'
-      })
+        message: "Issue not found",
+      });
     }
 
-    await Issue.findByIdAndDelete(req.params.id)
+    await Issue.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
-      message: 'Issue deleted successfully'
-    })
+      message: "Issue deleted successfully",
+    });
   } catch (error) {
     res.status(500).json({
-      message: 'Server error',
-      error: error.message
-    })
+      message: "Server error",
+      error: error.message,
+    });
   }
-}
+};
 
+// ======================================
+// EXPORTS
+// ======================================
 module.exports = {
   createIssue,
   getIssues,
   getIssueById,
   updateIssueStatus,
-  updateIssue,
-  deleteIssue,
   assignIssue,
   getIssueStats,
+  updateIssue,
+  deleteIssue,
 };

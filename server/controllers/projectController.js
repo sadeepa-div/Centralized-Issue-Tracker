@@ -1,5 +1,6 @@
 const Project = require("../models/Project");
 const User = require("../models/User");
+const Issue = require("../models/Issue");
 
 const createProject = async (req, res) => {
   try {
@@ -180,9 +181,44 @@ const removeProjectMember = async (req, res) => {
   }
 };
 
+const deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    const issueCount = await Issue.countDocuments({
+      project: project._id,
+    });
+
+    if (issueCount > 0) {
+      return res.status(400).json({
+        message: "Cannot delete this project because it still has issues",
+      });
+    }
+
+    await Project.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProject,
   getProjects,
+  getProjectById,
   addProjectMember,
-  removeProjectMember
+  removeProjectMember,
+  deleteProject,
 };

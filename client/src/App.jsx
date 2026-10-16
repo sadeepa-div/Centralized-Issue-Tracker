@@ -9,6 +9,7 @@ import CreateIssue from "./pages/CreateIssue";
 import IssueDetails from "./pages/IssueDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MyIssues from "./pages/MyIssues";
+import Profile from "./pages/Profile";
 
 import "./App.css";
 
@@ -80,6 +81,15 @@ function App() {
         element={
           <ProtectedRoute>
             <ProjectDetails />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

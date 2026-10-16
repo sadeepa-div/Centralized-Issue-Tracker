@@ -1,20 +1,27 @@
 ﻿import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import API_BASE_URL from "../config/api";
 import { Link, useNavigate, useParams } from "react-router-dom";
+
+import API_BASE_URL from "../config/api";
+import Sidebar from "../components/Sidebar";
+import { useToast } from "../context/ToastContext";
 
 function IssueDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [issue, setIssue] = useState(null);
   const [status, setStatus] = useState("");
-  const [message, setMessage] = useState("");
 
   const [developers, setDevelopers] = useState([]);
   const [assignee, setAssignee] = useState("");
 
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
+
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
   const [editMode, setEditMode] = useState(false);
 
   const [editTitle, setEditTitle] = useState("");
@@ -23,13 +30,19 @@ function IssueDetails() {
   const [editPriority, setEditPriority] = useState("Medium");
 
   const token = localStorage.getItem("token");
+
   const storedUser = localStorage.getItem("user");
+
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const navigate = useNavigate();
-  const canAssign = user?.role === "Admin" || user?.role === "Project Manager";
+
   const canManageIssue =
     user?.role === "Admin" || user?.role === "Project Manager";
 
+  const canAssign = canManageIssue;
+
+  // ======================================
+  // FETCH ISSUE
+  // ======================================
   const fetchIssue = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/issues/${id}`, {
@@ -46,17 +59,26 @@ function IssueDetails() {
       }
 
       setIssue(data);
-      setEditTitle(data.title);
-      setEditDescription(data.description);
-      setEditType(data.type);
-      setEditPriority(data.priority);
-      setStatus(data.status);
+
+      setStatus(data.status || "Open");
+
       setAssignee(data.assignee?._id || "");
+
+      setEditTitle(data.title || "");
+
+      setEditDescription(data.description || "");
+
+      setEditType(data.type || "Bug");
+
+      setEditPriority(data.priority || "Medium");
     } catch (error) {
       setMessage("Cannot connect to server");
     }
   };
 
+  // ======================================
+  // FETCH DEVELOPERS
+  // ======================================
   const fetchDevelopers = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/developers`, {
@@ -67,17 +89,17 @@ function IssueDetails() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setMessage(data.message);
-        return;
+      if (response.ok) {
+        setDevelopers(data);
       }
-
-      setDevelopers(data);
     } catch (error) {
-      setMessage("Cannot connect to server");
+      console.error(error);
     }
   };
 
+  // ======================================
+  // FETCH COMMENTS
+  // ======================================
   const fetchComments = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/comments/${id}`, {
@@ -88,116 +110,160 @@ function IssueDetails() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setMessage(data.message);
-        return;
+      if (response.ok) {
+        setComments(data);
       }
-
-      setComments(data);
     } catch (error) {
-      setMessage("Cannot connect to server");
+      console.error(error);
     }
   };
 
+  // ======================================
+  // LOAD PAGE
+  // ======================================
   useEffect(() => {
-    fetchIssue();
-    fetchComments();
+    const loadData = async () => {
+      setLoading(true);
 
-    if (canAssign) {
-      fetchDevelopers();
-    }
+      await Promise.all([
+        fetchIssue(),
+        fetchComments(),
+        canAssign ? fetchDevelopers() : Promise.resolve(),
+      ]);
+
+      setLoading(false);
+    };
+
+    loadData();
   }, [id]);
 
+  // ======================================
+  // STATUS UPDATE
+  // ======================================
   const handleStatusUpdate = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/issues/${id}/status`, {
         method: "PATCH",
+
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status }),
+
+        body: JSON.stringify({
+          status,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showToast(data.message || "Failed to update status", "error");
+
         return;
       }
 
-      setMessage("Issue status updated successfully");
+      showToast("Issue status updated successfully", "success");
+
       fetchIssue();
     } catch (error) {
-      setMessage("Cannot connect to server");
+      showToast("Cannot connect to server", "error");
     }
   };
 
+  // ======================================
+  // ASSIGN DEVELOPER
+  // ======================================
   const handleAssignIssue = async () => {
+    if (!assignee) {
+      showToast("Please select a developer", "error");
+
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/issues/${id}/assignee`, {
         method: "PATCH",
+
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ assignee }),
+
+        body: JSON.stringify({
+          assignee,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showToast(data.message || "Failed to assign developer", "error");
+
         return;
       }
 
-      setMessage("Issue assigned successfully");
+      showToast("Issue assigned successfully", "success");
+
       fetchIssue();
     } catch (error) {
-      setMessage("Cannot connect to server");
+      showToast("Cannot connect to server", "error");
     }
   };
 
+  // ======================================
+  // ADD COMMENT
+  // ======================================
   const handleAddComment = async (event) => {
     event.preventDefault();
 
     if (!commentText.trim()) {
+      showToast("Please enter a comment", "error");
+
       return;
     }
 
     try {
       const response = await fetch(`${API_BASE_URL}/comments/${id}`, {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ text: commentText }),
+
+        body: JSON.stringify({
+          text: commentText,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showToast(data.message || "Failed to add comment", "error");
+
         return;
       }
 
       setCommentText("");
+
+      showToast("Comment added successfully", "success");
+
       fetchComments();
     } catch (error) {
-      setMessage("Cannot connect to server");
+      showToast("Cannot connect to server", "error");
     }
   };
-
-  if (!issue) {
-    return (
-      <div className="dashboard-content">
-        {message ? <p>{message}</p> : <p>Loading issue...</p>}
-      </div>
-    );
-  }
-
+  // ======================================
+  // UPDATE ISSUE
+  // ======================================
   const handleUpdateIssue = async () => {
+    if (!editTitle.trim() || !editDescription.trim()) {
+      showToast("Title and description are required", "error");
+
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/issues/${id}`, {
         method: "PATCH",
@@ -218,19 +284,24 @@ function IssueDetails() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showToast(data.message || "Failed to update issue", "error");
+
         return;
       }
 
-      setMessage("Issue updated successfully");
+      showToast("Issue updated successfully", "success");
+
       setEditMode(false);
 
       fetchIssue();
     } catch (error) {
-      setMessage("Cannot connect to server");
+      showToast("Cannot connect to server", "error");
     }
   };
 
+  // ======================================
+  // DELETE ISSUE
+  // ======================================
   const handleDeleteIssue = async () => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this issue?",
@@ -252,197 +323,356 @@ function IssueDetails() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showToast(data.message || "Failed to delete issue", "error");
+
         return;
       }
 
-      navigate("/issues");
+      showToast("Issue deleted successfully", "success");
+
+      setTimeout(() => {
+        navigate("/issues");
+      }, 500);
     } catch (error) {
-      setMessage("Cannot connect to server");
+      showToast("Cannot connect to server", "error");
     }
   };
 
+  // ======================================
+  // DATE FORMAT
+  // ======================================
+  const formatDate = (date) => {
+    if (!date) {
+      return "Not available";
+    }
+
+    return new Date(date).toLocaleString();
+  };
+
+  const statusClass = `status-badge status-${issue?.status
+    ?.toLowerCase()
+    .replaceAll(" ", "-")}`;
+
+  const priorityClass = `priority-badge priority-${issue?.priority
+    ?.toLowerCase()
+    .replaceAll(" ", "-")}`;
+
+  // ======================================
+  // LOADING
+  // ======================================
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <Sidebar />
+
+        <main className="dashboard-content">
+          <div className="issues-loading">
+            <div className="loading-spinner"></div>
+
+            <p>Loading issue...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!issue) {
+    return (
+      <div className="dashboard-page">
+        <Sidebar />
+
+        <main className="dashboard-content">
+          <p>{message || "Issue not found"}</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-page">
-      <aside className="sidebar">
-        <h2>Bug Tracker</h2>
-
-        <nav>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/issues">Issues</Link>
-          <Link to="/my-issues">My Issues</Link>
-          <Link to="/create-issue">Create Issue</Link>
-        </nav>
-      </aside>
+      <Sidebar />
 
       <main className="dashboard-content">
-        <div className="page-header">
-          {canManageIssue && (
-            <div className="issue-actions">
-              <button
-                className="primary-button"
-                onClick={() => setEditMode(true)}
-              >
-                Edit Issue
-              </button>
+        {/* HEADER */}
+        <div className="issue-details-header">
+          <div>
+            <Link to="/issues" className="back-link">
+              ← Back to Issues
+            </Link>
 
-              <button className="delete-button" onClick={handleDeleteIssue}>
-                Delete Issue
-              </button>
+            <h1>{issue.title}</h1>
+
+            <div className="issue-header-badges">
+              <span className={statusClass}>{issue.status}</span>
+
+              <span className={priorityClass}>{issue.priority}</span>
+
+              <span className="type-badge">{issue.type}</span>
             </div>
-          )}
-          {editMode && (
-            <div className="edit-issue-form">
-              <h3>Edit Issue</h3>
-
-              <div className="form-group">
-                <label>Title</label>
-
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(event) => setEditTitle(event.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Description</label>
-
-                <textarea
-                  value={editDescription}
-                  onChange={(event) => setEditDescription(event.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Type</label>
-
-                <select
-                  value={editType}
-                  onChange={(event) => setEditType(event.target.value)}
-                >
-                  <option value="Bug">Bug</option>
-                  <option value="Task">Task</option>
-                  <option value="Feature">Feature</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Priority</label>
-
-                <select
-                  value={editPriority}
-                  onChange={(event) => setEditPriority(event.target.value)}
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Critical">Critical</option>
-                </select>
-              </div>
-
-              <div className="edit-buttons">
-                <button className="primary-button" onClick={handleUpdateIssue}>
-                  Save Changes
-                </button>
-
-                <button
-                  className="cancel-button"
-                  onClick={() => setEditMode(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-          <h1>Issue Details</h1>
-          <Link to="/issues">Back to Issues</Link>
-        </div>
-
-        {message && <p className="error-message">{message}</p>}
-
-        <div className="issue-detail-card">
-          <h2>{issue.title}</h2>
-          {canManageIssue && (
-            <div className="issue-actions">
-              <button
-                className="primary-button"
-                onClick={() => setEditMode(true)}
-              >
-                Edit Issue
-              </button>
-
-              <button className="delete-button" onClick={handleDeleteIssue}>
-                Delete Issue
-              </button>
-            </div>
-          )}
-          <p>{issue.description}</p>
-
-          <div className="issue-meta-row">
-            <span>Status</span>
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Testing">Testing</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Closed">Closed</option>
-            </select>
-            <button type="button" onClick={handleStatusUpdate}>
-              Update Status
-            </button>
           </div>
 
-          {canAssign && (
-            <div className="issue-meta-row">
-              <span>Assignee</span>
-              <select
-                value={assignee}
-                onChange={(event) => setAssignee(event.target.value)}
+          {canManageIssue && (
+            <div className="issue-header-actions">
+              <button
+                className="primary-button"
+                onClick={() => setEditMode(true)}
               >
-                <option value="">Unassigned</option>
-                {developers.map((developer) => (
-                  <option key={developer._id} value={developer._id}>
-                    {developer.name}
-                  </option>
-                ))}
-              </select>
-              <button type="button" onClick={handleAssignIssue}>
-                Assign
+                Edit Issue
+              </button>
+
+              <button className="delete-button" onClick={handleDeleteIssue}>
+                Delete
               </button>
             </div>
           )}
         </div>
 
-        <div className="comment-section">
-          <h3>Comments</h3>
+        {message && <div className="issue-message">{message}</div>}
 
-          <form onSubmit={handleAddComment}>
-            <textarea
-              value={commentText}
-              onChange={(event) => setCommentText(event.target.value)}
-              placeholder="Add a comment"
-              required
-            />
-            <button type="submit">Add Comment</button>
-          </form>
+        {/* MAIN GRID */}
+        <div className="issue-details-layout">
+          {/* LEFT SIDE */}
+          <div className="issue-details-main">
+            {/* DESCRIPTION */}
+            <div className="issue-details-section">
+              <h2>Description</h2>
 
-          {comments.length === 0 ? (
-            <p>No comments yet.</p>
-          ) : (
-            <div className="comments-list">
-              {comments.map((comment) => (
-                <div key={comment._id} className="comment-item">
-                  <strong>{comment.user?.name || "User"}</strong>
-                  <p>{comment.text}</p>
-                </div>
-              ))}
+              <p className="issue-description-full">{issue.description}</p>
             </div>
-          )}
+
+            {/* EDIT FORM */}
+            {editMode && (
+              <div className="issue-details-section edit-panel">
+                <div className="section-heading">
+                  <h2>Edit Issue</h2>
+
+                  <button
+                    className="close-edit-button"
+                    onClick={() => setEditMode(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="form-group">
+                  <label>Title</label>
+
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(event) => setEditTitle(event.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Description</label>
+
+                  <textarea
+                    value={editDescription}
+                    onChange={(event) => setEditDescription(event.target.value)}
+                  />
+                </div>
+
+                <div className="edit-form-grid">
+                  <div className="form-group">
+                    <label>Type</label>
+
+                    <select
+                      value={editType}
+                      onChange={(event) => setEditType(event.target.value)}
+                    >
+                      <option value="Bug">Bug</option>
+
+                      <option value="Task">Task</option>
+
+                      <option value="Feature">Feature</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Priority</label>
+
+                    <select
+                      value={editPriority}
+                      onChange={(event) => setEditPriority(event.target.value)}
+                    >
+                      <option value="Low">Low</option>
+
+                      <option value="Medium">Medium</option>
+
+                      <option value="High">High</option>
+
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="edit-buttons">
+                  <button
+                    className="primary-button"
+                    onClick={handleUpdateIssue}
+                  >
+                    Save Changes
+                  </button>
+
+                  <button
+                    className="cancel-button"
+                    onClick={() => setEditMode(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* COMMENTS */}
+            <div className="issue-details-section">
+              <div className="section-heading">
+                <h2>Comments</h2>
+
+                <span>{comments.length}</span>
+              </div>
+
+              <form className="modern-comment-form" onSubmit={handleAddComment}>
+                <textarea
+                  placeholder="Write a comment..."
+                  value={commentText}
+                  onChange={(event) => setCommentText(event.target.value)}
+                  required
+                />
+
+                <button type="submit" className="primary-button">
+                  Add Comment
+                </button>
+              </form>
+
+              {comments.length === 0 ? (
+                <div className="empty-comments">
+                  <p>No comments yet.</p>
+                </div>
+              ) : (
+                <div className="modern-comment-list">
+                  {comments.map((comment) => (
+                    <div className="modern-comment" key={comment._id}>
+                      <div className="comment-avatar">
+                        {comment.user?.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+
+                      <div className="comment-content">
+                        <div className="comment-heading">
+                          <strong>{comment.user?.name || "User"}</strong>
+
+                          <span>{formatDate(comment.createdAt)}</span>
+                        </div>
+
+                        {comment.user?.role && (
+                          <small>{comment.user.role}</small>
+                        )}
+
+                        <p>{comment.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT SIDE */}
+          <aside className="issue-details-sidebar">
+            {/* ISSUE INFO */}
+            <div className="issue-side-card">
+              <h3>Issue Information</h3>
+
+              <div className="issue-side-info">
+                <div>
+                  <span>Project</span>
+
+                  <strong>{issue.project?.name || "No Project"}</strong>
+                </div>
+
+                <div>
+                  <span>Reporter</span>
+
+                  <strong>{issue.reporter?.name || "Unknown"}</strong>
+                </div>
+
+                <div>
+                  <span>Assignee</span>
+
+                  <strong>{issue.assignee?.name || "Unassigned"}</strong>
+                </div>
+
+                <div>
+                  <span>Created</span>
+
+                  <strong>{formatDate(issue.createdAt)}</strong>
+                </div>
+
+                <div>
+                  <span>Last Updated</span>
+
+                  <strong>{formatDate(issue.updatedAt)}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* STATUS */}
+            <div className="issue-side-card">
+              <h3>Update Status</h3>
+
+              <select
+                className="side-select"
+                value={status}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                <option value="Open">Open</option>
+
+                <option value="In Progress">In Progress</option>
+
+                <option value="Testing">Testing</option>
+
+                <option value="Resolved">Resolved</option>
+
+                <option value="Closed">Closed</option>
+              </select>
+
+              <button
+                className="side-action-button"
+                onClick={handleStatusUpdate}
+              >
+                Update Status
+              </button>
+            </div>
+
+            {/* ASSIGN */}
+            {canAssign && (
+              <div className="issue-side-card">
+                <h3>Assign Developer</h3>
+
+                <select
+                  className="side-select"
+                  value={assignee}
+                  onChange={(event) => setAssignee(event.target.value)}
+                >
+                  <option value="">Select Developer</option>
+
+                  {developers.map((developer) => (
+                    <option key={developer._id} value={developer._id}>
+                      {developer.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  className="side-action-button"
+                  onClick={handleAssignIssue}
+                >
+                  Assign
+                </button>
+              </div>
+            )}
+          </aside>
         </div>
       </main>
     </div>
