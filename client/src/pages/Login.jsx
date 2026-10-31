@@ -178,19 +178,6 @@ function Login() {
               </button>
             </div>
 
-            {/* FORGOT */}
-            <div className="login-options">
-              <button
-                type="button"
-                className="forgot-password-button"
-                onClick={() =>
-                  showToast("Password recovery can be added later", "info")
-                }
-              >
-                Forgot Password?
-              </button>
-            </div>
-
             {/* LOGIN */}
             <button
               type="submit"
