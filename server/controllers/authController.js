@@ -144,17 +144,30 @@ const getCurrentUser = async (req, res) => {
 // FORGOT PASSWORD
 // ======================================
 const forgotPassword = async (req, res) => {
+  let user;
+  let hashedToken;
+
   try {
     const { email } = req.body;
 
-    if (!email) {
+    if (typeof email !== "string" || !email.trim()) {
       return res.status(400).json({
         message: "Email is required",
       });
     }
 
-    const user = await User.findOne({
-      email: email.toLowerCase(),
+    const emailUser = process.env.EMAIL_USER?.trim();
+    const emailPass = process.env.EMAIL_PASS?.replace(/\s/g, "");
+
+    if (!emailUser || !emailPass || emailPass.length !== 16) {
+      return res.status(503).json({
+        message:
+          "Password reset email is not configured. Set EMAIL_USER and a valid 16-character Gmail App Password in the server environment.",
+      });
+    }
+
+    user = await User.findOne({
+      email: email.trim().toLowerCase(),
     });
 
     // Don't reveal whether an account exists
@@ -167,57 +180,82 @@ const forgotPassword = async (req, res) => {
 
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    const hashedToken = crypto
+    hashedToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
     user.resetPasswordToken = hashedToken;
-
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
-
     await user.save();
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
     });
 
-    await transporter.sendMail({
-      from: `"BugFlow" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "BugFlow Password Reset",
-
-      html: `
-        <h2>BugFlow Password Reset</h2>
-
-        <p>You requested to reset your BugFlow password.</p>
-
-        <p>This link will expire in 15 minutes.</p>
-
-        <a href="${resetUrl}">
-          Reset Password
-        </a>
-
-        <p>If you did not request this, you can ignore this email.</p>
-      `,
-    });
+    try {
+      await transporter.sendMail({
+        from: `"BugFlow" <${emailUser}>`,
+        to: user.email,
+        subject: "BugFlow Password Reset",
+        html: `
+          <h2>BugFlow Password Reset</h2>
+          <p>You requested to reset your BugFlow password.</p>
+          <p>This link will expire in 15 minutes.</p>
+          <a href="${resetUrl}">Reset Password</a>
+          <p>If you did not request this, you can ignore this email.</p>
+        `,
+      });
+    } finally {
+      transporter.close();
+    }
 
     res.status(200).json({
       message:
         "If an account exists with this email, a password reset link has been sent.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Password reset email delivery failed:", {
+      code: error.code,
+      responseCode: error.responseCode,
+      command: error.command,
+    });
+
+    if (user && hashedToken) {
+      try {
+        await User.updateOne(
+          { _id: user._id, resetPasswordToken: hashedToken },
+          {
+            $set: {
+              resetPasswordToken: null,
+              resetPasswordExpires: null,
+            },
+          },
+        );
+      } catch (cleanupError) {
+        console.error("Failed to clear unused password reset token:", {
+          message: cleanupError.message,
+        });
+      }
+    }
+
+    const authenticationFailed =
+      error.code === "EAUTH" || error.responseCode === 535;
 
     res.status(500).json({
-      message: "Unable to send password reset email",
+      message: authenticationFailed
+        ? "Gmail rejected the email credentials. Set EMAIL_PASS to a valid Gmail App Password."
+        : "Unable to deliver the password reset email. Check the server email settings and try again.",
     });
   }
 };

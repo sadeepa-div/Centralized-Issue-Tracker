@@ -175,9 +175,18 @@ Create a `.env` file inside `server/`:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secure_jwt_secret
+CLIENT_URL=http://localhost:5173
+EMAIL_USER=your_gmail_address
+EMAIL_PASS=your_16_character_gmail_app_password
 ```
 
 > Do not commit the real `.env` file to GitHub.
+>
+> Password reset email uses Gmail SMTP. Enable 2-Step Verification on the
+> sending Google account, create a 16-character App Password, and use that
+> value for `EMAIL_PASS` (not the account's normal sign-in password). Spaces
+> in the displayed App Password are optional. `CLIENT_URL` must be the URL
+> where the frontend is running so the reset link points to the right app.
 
 Start the backend:
 

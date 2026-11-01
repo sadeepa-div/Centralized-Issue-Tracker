@@ -178,6 +178,15 @@ function Login() {
               </button>
             </div>
 
+            <div className="login-options">
+              <Link
+                className="forgot-password-button"
+                to="/forgot-password"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
             {/* LOGIN */}
             <button
               type="submit"
