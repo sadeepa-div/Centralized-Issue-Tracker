@@ -5,6 +5,7 @@ BugFlow is a full-stack web application for managing software projects, issues, 
 ## Core Features
 
 - User registration and login with JWT authentication
+- Forgot-password and password-reset flow using Gmail SMTP
 - Role-based users: Admin, Project Manager, Developer, Tester
 - Protected routes and backend role authorization
 - Project creation and project detail views
@@ -21,6 +22,7 @@ BugFlow is a full-stack web application for managing software projects, issues, 
 - Dashboard statistics and recent issues
 - Project progress information
 - Profile page and logout
+- Persistent light and dark themes
 - Toast notifications and user-friendly error messages
 - Responsive React interface
 
@@ -69,7 +71,8 @@ Centralized-Issue-Tracker/
 │   │   ├── context/
 │   │   ├── pages/
 │   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   ├── main.jsx
+│   │   └── theme.css
 │   ├── package.json
 │   └── vite.config.js
 ├── server/
@@ -116,6 +119,8 @@ BugFlow uses four main MongoDB collections:
 ### Authentication
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password/:token`
 - `GET /api/auth/me`
 
 ### Projects
@@ -146,6 +151,9 @@ BugFlow uses four main MongoDB collections:
 - `GET /api/users/team`
 - `GET /api/users/project/:projectId/developers`
 
+### Health
+- `GET /api/health`
+
 ## Local Setup
 
 ### Prerequisites
@@ -154,6 +162,10 @@ Install:
 - Node.js and npm
 - MongoDB Community Server or use MongoDB Atlas
 - Git
+
+The frontend and backend are separate npm projects; there is no root-level
+`package.json`. Run npm commands from the `client/` or `server/` directory as
+shown below.
 
 ### 1. Clone the repository
 
@@ -223,6 +235,15 @@ The frontend API configuration points to:
 http://127.0.0.1:5000/api
 ```
 
+To build and lint the frontend, run these commands from `client/`:
+
+```bash
+npm run build
+npm run lint
+```
+
+The backend currently does not define an automated test suite.
+
 ## Validation and Error Handling
 
 The application includes both frontend and backend checks, including:
@@ -261,7 +282,8 @@ Manual functional testing covers:
 - Comments
 - Search and filters
 - Dashboard and profile
-- Production frontend build
+- Production frontend build (`npm run build` in `client/`)
+- Frontend lint (`npm run lint` in `client/`)
 
 ## UI Screenshots
 
