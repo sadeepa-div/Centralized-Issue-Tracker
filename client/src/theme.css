@@ -281,6 +281,7 @@ body {
 .dashboard-completion,
 .dashboard-empty-state,
 .calendar-selected-info,
+.profile-empty,
 .empty-state,
 .empty-projects,
 .empty-project-issues,
@@ -417,6 +418,103 @@ select option {
   font-weight: 600;
 }
 
+.project-summary-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.project-summary-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary) !important;
+}
+
+.project-summary-card.active {
+  border-color: var(--primary) !important;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--primary) 16%, transparent),
+    var(--card-shadow);
+}
+
+.project-summary-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.project-summary-card small {
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.project-summary-issue-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 14px;
+}
+
+.project-summary-issue-card {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  color: var(--text-main);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.project-summary-issue-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.project-summary-issue-main {
+  min-width: 0;
+}
+
+.project-summary-issue-main h3 {
+  margin: 8px 0 5px;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.project-summary-issue-main p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.project-summary-issue-meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 .issue-type-guide {
   color: var(--text-main);
   background: var(--surface-soft) !important;
@@ -429,6 +527,230 @@ select option {
 
 .issue-type-guide p {
   color: var(--text-muted) !important;
+}
+
+.my-issues-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.my-issues-stats .my-issue-stat {
+  position: relative;
+  display: flex;
+  min-height: 110px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-raised);
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.my-issues-stats .my-issue-stat:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.my-issues-stats .my-issue-stat.active {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--primary) 16%, transparent),
+    var(--card-shadow);
+}
+
+.my-issues-stats .my-issue-stat:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.my-issues-stats .my-issue-stat::after {
+  position: absolute;
+  right: -20px;
+  bottom: -34px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--stat-accent, var(--primary));
+  content: "";
+  opacity: 0.1;
+}
+
+.my-issues-stats .my-issue-stat:nth-child(2) {
+  --stat-accent: #f59e0b;
+}
+
+.my-issues-stats .my-issue-stat:nth-child(3) {
+  --stat-accent: #55a2ff;
+}
+
+.my-issues-stats .my-issue-stat:nth-child(4) {
+  --stat-accent: #22a06b;
+}
+
+.my-issues-stats .my-issue-stat span {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.my-issues-stats .my-issue-stat strong {
+  color: var(--text-main);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.my-issues-stats .my-issue-stat small {
+  position: relative;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.my-issues-filter-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.my-issues-search-box {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+}
+
+.my-issues-filter-panel > select {
+  min-width: 150px;
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text-main) !important;
+  background-color: var(--surface-soft) !important;
+}
+
+.my-issues-filter-panel .clear-filter-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-main);
+  background: var(--surface-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.my-issues-filter-panel .clear-filter-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.my-issues-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+}
+
+.my-issues-list .my-issue-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-raised);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.my-issues-list .my-issue-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: var(--card-shadow);
+}
+
+.my-issues-list .my-issue-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.my-issues-list .my-issue-card-top > div {
+  min-width: 0;
+}
+
+.my-issues-list .my-issue-card-top h3 {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  font-size: 17px;
+}
+
+.my-issues-list .my-issue-card > p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted) !important;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.my-issues-list .my-issue-card-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.my-issues-list .my-issue-card-bottom > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.my-issues-list .my-issue-card-bottom > div > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.my-issues-list .my-issue-card-bottom strong {
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-issues-list .my-issue-card-bottom .status-badge {
+  justify-self: end;
 }
 
 .premium-login-page,
@@ -515,11 +837,18 @@ select option {
   color: var(--text-main);
 }
 
-.project-icon,
 .member-avatar,
 .profile-avatar,
 .comment-avatar {
   color: #ffffff;
+}
+
+.project-icon {
+  color: var(--primary) !important;
+}
+
+.project-icon svg {
+  display: block;
 }
 
 .type-badge,
@@ -638,6 +967,55 @@ select option {
   .project-search span {
     padding: 7px 9px;
     font-size: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .my-issues-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .my-issues-filter-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 14px;
+  }
+
+  .my-issues-filter-panel > select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .my-issues-filter-panel .clear-filter-button {
+    grid-column: 1 / -1;
+  }
+
+  .my-issues-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .my-issues-stats {
+    gap: 10px;
+  }
+
+  .my-issues-stats .my-issue-stat {
+    min-height: 96px;
+    padding: 15px;
+  }
+
+  .my-issues-list .my-issue-card {
+    padding: 16px;
+  }
+
+  .my-issues-list .my-issue-card-bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-issues-list .my-issue-card-bottom .status-badge {
+    justify-self: start;
   }
 }
 

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { FolderKanban, Search } from "lucide-react";
 import API_BASE_URL from "../config/api";
 import Sidebar from "../components/Sidebar";
 import { useToast } from "../context/ToastContext";
@@ -11,6 +11,7 @@ function Projects() {
   const [issues, setIssues] = useState([]);
 
   const [search, setSearch] = useState("");
+  const [summaryView, setSummaryView] = useState("projects");
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -169,7 +170,7 @@ function Projects() {
   // ===============================
   // SEARCH
   // ===============================
-  const filteredProjects = projects.filter((project) => {
+  const matchingProjects = projects.filter((project) => {
     const text = search.toLowerCase();
 
     return (
@@ -177,6 +178,30 @@ function Projects() {
       project.description?.toLowerCase().includes(text)
     );
   });
+
+  const filteredProjects =
+    summaryView === "projects-with-issues"
+      ? matchingProjects.filter(
+          (project) => getProjectStats(project._id).totalIssues > 0,
+        )
+      : matchingProjects;
+
+  const completedIssues = issues
+    .filter(
+      (issue) => issue.status === "Resolved" || issue.status === "Closed",
+    )
+    .filter((issue) => {
+      const text = search.toLowerCase();
+      return (
+        issue.title?.toLowerCase().includes(text) ||
+        issue.description?.toLowerCase().includes(text) ||
+        issue.project?.name?.toLowerCase().includes(text)
+      );
+    });
+
+  const completedIssueCount = issues.filter(
+    (issue) => issue.status === "Resolved" || issue.status === "Closed",
+  ).length;
 
   return (
     <div className="dashboard-page">
@@ -237,30 +262,47 @@ function Projects() {
 
         {/* TOP SUMMARY */}
         <div className="project-summary-grid">
-          <div className="project-summary-card">
+          <button
+            type="button"
+            className={`project-summary-card ${
+              summaryView === "projects" ? "active" : ""
+            }`}
+            onClick={() => setSummaryView("projects")}
+            aria-pressed={summaryView === "projects"}
+          >
             <span>Total Projects</span>
 
             <strong>{projects.length}</strong>
-          </div>
+            <small>Show all projects</small>
+          </button>
 
-          <div className="project-summary-card">
+          <button
+            type="button"
+            className={`project-summary-card ${
+              summaryView === "projects-with-issues" ? "active" : ""
+            }`}
+            onClick={() => setSummaryView("projects-with-issues")}
+            aria-pressed={summaryView === "projects-with-issues"}
+          >
             <span>Total Issues</span>
 
             <strong>{issues.length}</strong>
-          </div>
+            <small>Show projects with issues</small>
+          </button>
 
-          <div className="project-summary-card">
+          <button
+            type="button"
+            className={`project-summary-card ${
+              summaryView === "completed-issues" ? "active" : ""
+            }`}
+            onClick={() => setSummaryView("completed-issues")}
+            aria-pressed={summaryView === "completed-issues"}
+          >
             <span>Completed Issues</span>
 
-            <strong>
-              {
-                issues.filter(
-                  (issue) =>
-                    issue.status === "Resolved" || issue.status === "Closed",
-                ).length
-              }
-            </strong>
-          </div>
+            <strong>{completedIssueCount}</strong>
+            <small>Show completed issues</small>
+          </button>
         </div>
 
         {/* SEARCH */}
@@ -268,30 +310,92 @@ function Projects() {
           <Search size={19} aria-hidden="true" />
           <input
             type="text"
-            placeholder="Search projects..."
-            aria-label="Search projects"
+            placeholder={
+              summaryView === "completed-issues"
+                ? "Search completed issues..."
+                : "Search projects..."
+            }
+            aria-label={
+              summaryView === "completed-issues"
+                ? "Search completed issues"
+                : "Search projects"
+            }
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
 
           <span>
-            {filteredProjects.length} project
-            {filteredProjects.length === 1 ? "" : "s"}
+            {summaryView === "completed-issues"
+              ? `${completedIssues.length} completed issue${
+                  completedIssues.length === 1 ? "" : "s"
+                }`
+              : `${filteredProjects.length} project${
+                  filteredProjects.length === 1 ? "" : "s"
+                }`}
           </span>
         </div>
 
-        {/* PROJECTS */}
+        {/* SUMMARY RESULTS */}
         {loading ? (
           <div className="projects-loading">
             <div className="loading-spinner"></div>
 
-            <p>Loading projects...</p>
+            <p>
+              {summaryView === "completed-issues"
+                ? "Loading issues..."
+                : "Loading projects..."}
+            </p>
           </div>
+        ) : summaryView === "completed-issues" ? (
+          completedIssues.length === 0 ? (
+            <div className="empty-projects">
+              <h3>No Completed Issues Found</h3>
+              <p>
+                {search
+                  ? "No completed issues match your search."
+                  : "There are no resolved or closed issues yet."}
+              </p>
+            </div>
+          ) : (
+            <div className="project-summary-issue-list">
+              {completedIssues.map((issue) => (
+                <Link
+                  key={issue._id}
+                  to={`/issues/${issue._id}`}
+                  className="project-summary-issue-card"
+                >
+                  <div className="project-summary-issue-main">
+                    <span className="type-badge">{issue.type}</span>
+                    <h3>{issue.title}</h3>
+                    <p>{issue.description}</p>
+                  </div>
+                  <div className="project-summary-issue-meta">
+                    <span>{issue.project?.name || "No Project"}</span>
+                    <span
+                      className={`status-badge status-${issue.status
+                        ?.toLowerCase()
+                        .replaceAll(" ", "-")}`}
+                    >
+                      {issue.status}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )
         ) : filteredProjects.length === 0 ? (
           <div className="empty-projects">
-            <h3>No Projects Found</h3>
+            <h3>
+              {summaryView === "projects-with-issues"
+                ? "No Projects with Issues"
+                : "No Projects Found"}
+            </h3>
 
-            <p>No projects match your search.</p>
+            <p>
+              {summaryView === "projects-with-issues"
+                ? "No projects with issues match your search."
+                : "No projects match your search."}
+            </p>
           </div>
         ) : (
           <div className="modern-project-grid">
@@ -307,7 +411,7 @@ function Projects() {
                   {/* CARD HEADER */}
                   <div className="project-card-header">
                     <div className="project-icon">
-                      {project.name?.charAt(0).toUpperCase()}
+                      <FolderKanban size={22} aria-hidden="true" />
                     </div>
 
                     <div>

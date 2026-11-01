@@ -43,6 +43,9 @@ function MyIssues() {
   const [priority, setPriority] =
     useState("");
 
+  const [summaryFilter, setSummaryFilter] =
+    useState("");
+
   // ==========================
   // LOAD MY ISSUES
   // ==========================
@@ -139,6 +142,7 @@ function MyIssues() {
     setSearch("");
     setStatus("");
     setPriority("");
+    setSummaryFilter("");
   };
 
   // ==========================
@@ -170,6 +174,22 @@ function MyIssues() {
         issue.status ===
           "Closed"
     ).length;
+
+  const visibleIssues = issues.filter((issue) => {
+    if (summaryFilter === "open") {
+      return issue.status === "Open";
+    }
+
+    if (summaryFilter === "active") {
+      return issue.status === "In Progress" || issue.status === "Testing";
+    }
+
+    if (summaryFilter === "completed") {
+      return issue.status === "Resolved" || issue.status === "Closed";
+    }
+
+    return true;
+  });
 
   // ==========================
   // ROLE MESSAGE
@@ -209,36 +229,80 @@ function MyIssues() {
         </div>
 
         {/* SUMMARY */}
-        <div className="my-issues-stats">
+        <div className="my-issues-stats my-issue-summary">
 
-          <div className="my-issue-stat">
+          <button
+            type="button"
+            className={`my-issue-stat ${
+              summaryFilter === "" ? "active" : ""
+            }`}
+            onClick={() => {
+              setSummaryFilter("");
+              setStatus("");
+            }}
+            aria-pressed={summaryFilter === ""}
+          >
             <span>Total</span>
             <strong>{total}</strong>
-          </div>
+            <small>Show all issues</small>
+          </button>
 
-          <div className="my-issue-stat">
+          <button
+            type="button"
+            className={`my-issue-stat ${
+              summaryFilter === "open" ? "active" : ""
+            }`}
+            onClick={() => {
+              setSummaryFilter("open");
+              setStatus("");
+            }}
+            aria-pressed={summaryFilter === "open"}
+          >
             <span>Open</span>
             <strong>{open}</strong>
-          </div>
+            <small>Show open issues</small>
+          </button>
 
-          <div className="my-issue-stat">
+          <button
+            type="button"
+            className={`my-issue-stat ${
+              summaryFilter === "active" ? "active" : ""
+            }`}
+            onClick={() => {
+              setSummaryFilter("active");
+              setStatus("");
+            }}
+            aria-pressed={summaryFilter === "active"}
+          >
             <span>Active</span>
             <strong>{active}</strong>
-          </div>
+            <small>Show active issues</small>
+          </button>
 
-          <div className="my-issue-stat">
+          <button
+            type="button"
+            className={`my-issue-stat ${
+              summaryFilter === "completed" ? "active" : ""
+            }`}
+            onClick={() => {
+              setSummaryFilter("completed");
+              setStatus("");
+            }}
+            aria-pressed={summaryFilter === "completed"}
+          >
             <span>Completed</span>
             <strong>
               {completed}
             </strong>
-          </div>
+            <small>Show completed issues</small>
+          </button>
 
         </div>
 
         {/* FILTERS */}
-        <div className="issue-filter-panel">
+        <div className="issue-filter-panel my-issues-filter-panel">
 
-          <div className="issue-search-box">
+          <div className="issue-search-box my-issues-search-box">
             <Search size={18} />
 
             <input
@@ -258,11 +322,12 @@ function MyIssues() {
             "Tester" && (
             <select
               value={status}
-              onChange={(event) =>
+              onChange={(event) => {
+                setSummaryFilter("");
                 setStatus(
                   event.target.value
-                )
-              }
+                );
+              }}
             >
               <option value="">
                 All Statuses
@@ -335,21 +400,24 @@ function MyIssues() {
           <div className="loading-state">
             Loading issues...
           </div>
-        ) : issues.length === 0 ? (
+        ) : visibleIssues.length === 0 ? (
           <div className="empty-state">
             <h3>
-              No issues found
+              {summaryFilter
+                ? `No ${summaryFilter} issues found`
+                : "No issues found"}
             </h3>
 
             <p>
-              There are currently no
-              issues for this workspace.
+              {summaryFilter
+                ? `There are currently no ${summaryFilter} issues matching these filters.`
+                : "There are currently no issues for this workspace."}
             </p>
           </div>
         ) : (
           <div className="my-issues-list">
 
-            {issues.map((issue) => (
+            {visibleIssues.map((issue) => (
               <div
                 key={issue._id}
                 className="my-issue-card"
