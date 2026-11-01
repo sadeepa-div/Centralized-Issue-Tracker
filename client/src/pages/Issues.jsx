@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 import API_BASE_URL from "../config/api";
 import Sidebar from "../components/Sidebar";
 
@@ -184,11 +185,12 @@ function Issues() {
         {/* FILTER AREA */}
         <div className="issue-filter-panel">
           <div className="issue-search-box">
-            <span>⌕</span>
+            <Search size={19} aria-hidden="true" />
 
             <input
               type="text"
               placeholder="Search issue title..."
+              aria-label="Search issue title"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />

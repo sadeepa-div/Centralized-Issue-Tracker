@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Search } from "lucide-react";
 import API_BASE_URL from "../config/api";
 import Sidebar from "../components/Sidebar";
 import { useToast } from "../context/ToastContext";
@@ -264,9 +265,11 @@ function Projects() {
 
         {/* SEARCH */}
         <div className="project-search">
+          <Search size={19} aria-hidden="true" />
           <input
             type="text"
             placeholder="Search projects..."
+            aria-label="Search projects"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />

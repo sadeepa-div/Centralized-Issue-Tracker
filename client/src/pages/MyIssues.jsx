@@ -244,6 +244,7 @@ function MyIssues() {
             <input
               type="text"
               placeholder="Search issues..."
+              aria-label="Search issues"
               value={search}
               onChange={(event) =>
                 setSearch(
